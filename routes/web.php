@@ -1,16 +1,21 @@
 <?php
 
-/**
- * =====================================================
- * WEB ROUTES - MIRAI LANDING PAGE
- * =====================================================
- * 
- * File ini berisi routing untuk landing page Mirai
- * Letakkan file ini di: routes/web.php
- */
-
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ProfileController;
+use App\Models\Cycle;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "web" middleware group. Make something great!
+|
+*/
 
 // =====================================================
 // HALAMAN UTAMA
@@ -101,6 +106,30 @@ Route::get('/api/team', function () {
     return response()->json($team);
 })->name('api.team');
 
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+Route::get('/pengaturan', function () {
+    return view('layouts.admin.pengaturan');
+})->name('pengaturan');
+
+
+Route::get('/test-mongo', function () {
+    \App\Models\Cycle::create([
+        'user_id' => 1,
+        'cycle_length' => 28,
+        'prediction_result' => '2026-04-05'
+    ]);
+
+    return "Data berhasil masuk MongoDB!";
+});
 
 // =====================================================
 // DOWNLOAD ROUTES (UNTUK TOMBOL DOWNLOAD)
@@ -121,3 +150,6 @@ Route::get('/download/android', function () {
     // Ganti dengan link Play Store yang sebenarnya
     return redirect('https://play.google.com/store');
 })->name('download.android');
+
+
+require __DIR__ . '/auth.php';

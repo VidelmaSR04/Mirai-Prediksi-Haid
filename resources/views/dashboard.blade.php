@@ -1,6 +1,6 @@
-
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,10 +17,12 @@
     <!-- Google Fonts - STANDARDIZED: Inter Only -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
 
     <!-- Material Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 
     <!-- ============================================
@@ -151,6 +153,7 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -163,12 +166,29 @@
         }
 
         /* Staggered delays untuk sequential animation */
-        .delay-1 { animation-delay: 0.05s; }
-        .delay-2 { animation-delay: 0.1s; }
-        .delay-3 { animation-delay: 0.15s; }
-        .delay-4 { animation-delay: 0.2s; }
-        .delay-5 { animation-delay: 0.25s; }
-        .delay-6 { animation-delay: 0.3s; }
+        .delay-1 {
+            animation-delay: 0.05s;
+        }
+
+        .delay-2 {
+            animation-delay: 0.1s;
+        }
+
+        .delay-3 {
+            animation-delay: 0.15s;
+        }
+
+        .delay-4 {
+            animation-delay: 0.2s;
+        }
+
+        .delay-5 {
+            animation-delay: 0.25s;
+        }
+
+        .delay-6 {
+            animation-delay: 0.3s;
+        }
 
         /* Chart line drawing animation */
         @keyframes drawLine {
@@ -281,7 +301,8 @@
 
             <!-- Logo & Brand -->
             <div class="p-8 flex items-center gap-3">
-                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-md shadow-primary/20">
+                <div
+                    class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-md shadow-primary/20">
                     <span class="material-icons-round text-white text-2xl" aria-hidden="true">auto_awesome</span>
                 </div>
                 <h1 class="text-2xl font-bold tracking-tight text-primary">MIRAI</h1>
@@ -292,43 +313,43 @@
 
                 <!-- Dashboard (ACTIVE) -->
                 <a href="#dashboard"
-                   class="nav-link active flex items-center gap-3 px-4 py-3 bg-primary text-white rounded-xl transition-all shadow-sm"
-                   aria-current="page">
+                    class="nav-link active flex items-center gap-3 px-4 py-3 bg-primary text-white rounded-xl transition-all shadow-sm"
+                    aria-current="page">
                     <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
                     <span class="font-medium">Dashboard</span>
                 </a>
 
                 <!-- Data Pengguna -->
                 <a href="#data-pengguna"
-                   class="nav-link flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-rose-100 hover:text-primary rounded-xl transition-all">
+                    class="nav-link flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-rose-100 hover:text-primary rounded-xl transition-all">
                     <span class="material-symbols-outlined" aria-hidden="true">person</span>
                     <span class="font-medium">Data Pengguna</span>
                 </a>
 
                 <!-- Data Siklus Menstruasi -->
                 <a href="#data-siklus"
-                   class="nav-link flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-rose-100 hover:text-primary rounded-xl transition-all">
+                    class="nav-link flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-rose-100 hover:text-primary rounded-xl transition-all">
                     <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
                     <span class="font-medium">Data Siklus Menstruasi</span>
                 </a>
 
                 <!-- Prediksi & Kesuburan -->
                 <a href="#prediksi"
-                   class="nav-link flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-rose-100 hover:text-primary rounded-xl transition-all">
+                    class="nav-link flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-rose-100 hover:text-primary rounded-xl transition-all">
                     <span class="material-symbols-outlined" aria-hidden="true">health_and_safety</span>
                     <span class="font-medium">Prediksi & Kesuburan</span>
                 </a>
 
                 <!-- Analitik & Grafik -->
                 <a href="#analitik"
-                   class="nav-link flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-rose-100 hover:text-primary rounded-xl transition-all">
+                    class="nav-link flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-rose-100 hover:text-primary rounded-xl transition-all">
                     <span class="material-symbols-outlined" aria-hidden="true">analytics</span>
                     <span class="font-medium">Analitik & Grafik</span>
                 </a>
 
                 <!-- Laporan -->
                 <a href="#laporan"
-                   class="nav-link flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-rose-100 hover:text-primary rounded-xl transition-all">
+                    class="nav-link flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-rose-100 hover:text-primary rounded-xl transition-all">
                     <span class="material-symbols-outlined" aria-hidden="true">description</span>
                     <span class="font-medium">Laporan</span>
                 </a>
@@ -338,19 +359,21 @@
             <!-- Bottom Actions (Settings & Logout) -->
             <div class="p-6 border-t border-rose-100 space-y-2">
 
-                <a href="#pengaturan"
-                   class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-rose-100 hover:text-primary rounded-xl transition-all">
+                <a href="{{ route('pengaturan') }}"
+                    class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-rose-100 hover:text-primary rounded-xl transition-all">
                     <span class="material-symbols-outlined" aria-hidden="true">settings</span>
                     <span class="font-medium">Pengaturan</span>
                 </a>
 
-                <button onclick="handleLogout()"
-                        class="w-full flex items-center gap-3 px-4 py-3 text-rose-500 hover:bg-rose-100 rounded-xl transition-all"
-                        aria-label="Keluar dari sistem">
-                    <span class="material-symbols-outlined" aria-hidden="true">logout</span>
-                    <span class="font-medium">Keluar</span>
-                </button>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button onclick="openLogoutModal()"
+                        class="w-full flex items-center gap-3 px-4 py-3 text-rose-500 hover:bg-rose-100 rounded-xl">
 
+                        <span class="material-symbols-outlined">logout</span>
+                        <span class="font-medium">Keluar</span>
+                    </button>
+                </form>
             </div>
 
         </aside>
@@ -370,16 +393,16 @@
                  - Notifications
                  - User profile
                  ============================================ -->
-            <header class="h-20 bg-white border-b border-rose-50 flex items-center justify-between px-6 lg:px-10 flex-shrink-0">
+            <header
+                class="h-20 bg-white border-b border-rose-50 flex items-center justify-between px-6 lg:px-10 flex-shrink-0">
 
                 <!-- Left: Mobile Menu + Title -->
                 <div class="flex items-center gap-4">
 
                     <!-- Mobile Menu Toggle Button -->
                     <button onclick="toggleSidebar()"
-                            class="lg:hidden p-2 text-slate-600 hover:text-primary hover:bg-rose-50 rounded-lg transition-all"
-                            aria-label="Toggle menu"
-                            aria-expanded="false">
+                        class="lg:hidden p-2 text-slate-600 hover:text-primary hover:bg-rose-50 rounded-lg transition-all"
+                        aria-label="Toggle menu" aria-expanded="false">
                         <span class="material-symbols-outlined">menu</span>
                     </button>
 
@@ -393,21 +416,24 @@
                     <!-- Search Bar (hidden di mobile) -->
                     <div class="relative hidden md:block">
                         <label for="searchInput" class="sr-only">Cari log sistem</label>
-                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" aria-hidden="true">
+                        <span
+                            class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                            aria-hidden="true">
                             search
                         </span>
-                        <input id="searchInput"
-                               type="search"
-                               class="pl-10 pr-4 py-2 bg-slate-50 border-none rounded-full text-sm focus:ring-2 focus:ring-primary/20 w-48 lg:w-64"
-                               placeholder="Cari log sistem..."/>
+                        <input id="searchInput" type="search"
+                            class="pl-10 pr-4 py-2 bg-slate-50 border-none rounded-full text-sm focus:ring-2 focus:ring-primary/20 w-48 lg:w-64"
+                            placeholder="Cari log sistem..." />
                     </div>
 
                     <!-- Notifications Button -->
-                    <button class="relative p-2 text-slate-400 hover:text-primary hover:bg-rose-50 rounded-lg transition-all"
-                            aria-label="Notifikasi (3 belum dibaca)">
+                    <button
+                        class="relative p-2 text-slate-400 hover:text-primary hover:bg-rose-50 rounded-lg transition-all"
+                        aria-label="Notifikasi (3 belum dibaca)">
                         <span class="material-symbols-outlined" aria-hidden="true">notifications</span>
                         <!-- Badge: unread count -->
-                        <span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-white"></span>
+                        <span
+                            class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-white"></span>
                     </button>
 
                     <!-- Divider -->
@@ -422,9 +448,8 @@
                         </div>
                         <!-- Avatar -->
                         <div class="w-10 h-10 rounded-full border-2 border-primary overflow-hidden">
-                            <img alt="Sarah Jenkins"
-                                 class="w-full h-full object-cover"
-                                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuBd5O7bCkEck3mAE5X76r1tzFmTi7vKs91dKvImYSOPIZA6ffLRGC-STIkifTXUM4dKJ9Nvbv-zKUBcIhJS77ZU5eq6mfSxCy9V3P37-VgdAB4HStRt-tHkMDuxTXsSe8QJZPEJk9yiTrOOa_RBPQ97S-m-R8PDN0JC77F2SEUSSf8FGtzZsGatzd963VH6Zt8vP_uYyN737GksaTEQtNYrn0XDnRS_nOBBStzyRCHfmx8K9P9UxcAPPj9aSLEa-G6uVC8w_qVHKdzY"/>
+                            <img alt="Sarah Jenkins" class="w-full h-full object-cover"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBd5O7bCkEck3mAE5X76r1tzFmTi7vKs91dKvImYSOPIZA6ffLRGC-STIkifTXUM4dKJ9Nvbv-zKUBcIhJS77ZU5eq6mfSxCy9V3P37-VgdAB4HStRt-tHkMDuxTXsSe8QJZPEJk9yiTrOOa_RBPQ97S-m-R8PDN0JC77F2SEUSSf8FGtzZsGatzd963VH6Zt8vP_uYyN737GksaTEQtNYrn0XDnRS_nOBBStzyRCHfmx8K9P9UxcAPPj9aSLEa-G6uVC8w_qVHKdzY" />
                         </div>
                     </div>
 
@@ -452,7 +477,8 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
                         <!-- CARD 1: Total Pengguna -->
-                        <div class="stat-card fade-in delay-1 bg-gradient-to-br from-rose-50 to-white p-6 rounded-2xl border border-rose-100 shadow-sm">
+                        <div
+                            class="stat-card fade-in delay-1 bg-gradient-to-br from-rose-50 to-white p-6 rounded-2xl border border-rose-100 shadow-sm">
                             <div class="flex justify-between items-start mb-4">
                                 <div class="flex-1">
                                     <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
@@ -463,7 +489,8 @@
                                         12,450
                                     </p>
                                 </div>
-                                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-primary shadow-sm">
+                                <div
+                                    class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-primary shadow-sm">
                                     <span class="material-symbols-outlined" aria-hidden="true">group</span>
                                 </div>
                             </div>
@@ -476,7 +503,8 @@
                         </div>
 
                         <!-- CARD 2: Pengguna Aktif -->
-                        <div class="stat-card fade-in delay-2 bg-gradient-to-br from-amber-50 to-white p-6 rounded-2xl border border-amber-100 shadow-sm">
+                        <div
+                            class="stat-card fade-in delay-2 bg-gradient-to-br from-amber-50 to-white p-6 rounded-2xl border border-amber-100 shadow-sm">
                             <div class="flex justify-between items-start mb-4">
                                 <div class="flex-1">
                                     <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
@@ -487,7 +515,8 @@
                                         8,210
                                     </p>
                                 </div>
-                                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-amber-500 shadow-sm">
+                                <div
+                                    class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-amber-500 shadow-sm">
                                     <span class="material-symbols-outlined" aria-hidden="true">vital_signs</span>
                                 </div>
                             </div>
@@ -498,7 +527,8 @@
                         </div>
 
                         <!-- CARD 3: Catatan Siklus -->
-                        <div class="stat-card fade-in delay-3 bg-gradient-to-br from-blue-50 to-white p-6 rounded-2xl border border-blue-100 shadow-sm">
+                        <div
+                            class="stat-card fade-in delay-3 bg-gradient-to-br from-blue-50 to-white p-6 rounded-2xl border border-blue-100 shadow-sm">
                             <div class="flex justify-between items-start mb-4">
                                 <div class="flex-1">
                                     <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
@@ -509,7 +539,8 @@
                                         45,200
                                     </p>
                                 </div>
-                                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-blue-500 shadow-sm">
+                                <div
+                                    class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-blue-500 shadow-sm">
                                     <span class="material-symbols-outlined" aria-hidden="true">history_edu</span>
                                 </div>
                             </div>
@@ -522,7 +553,8 @@
                         </div>
 
                         <!-- CARD 4: Total Prediksi -->
-                        <div class="stat-card fade-in delay-4 bg-gradient-to-br from-emerald-50 to-white p-6 rounded-2xl border border-emerald-100 shadow-sm">
+                        <div
+                            class="stat-card fade-in delay-4 bg-gradient-to-br from-emerald-50 to-white p-6 rounded-2xl border border-emerald-100 shadow-sm">
                             <div class="flex justify-between items-start mb-4">
                                 <div class="flex-1">
                                     <p class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
@@ -533,7 +565,8 @@
                                         38,900
                                     </p>
                                 </div>
-                                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
+                                <div
+                                    class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-emerald-500 shadow-sm">
                                     <span class="material-symbols-outlined" aria-hidden="true">magic_button</span>
                                 </div>
                             </div>
@@ -558,16 +591,19 @@
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                         <!-- CHART 1: Line Chart - Trend Engagement -->
-                        <div class="fade-in delay-5 lg:col-span-2 bg-white p-8 rounded-2xl border border-rose-100 shadow-sm">
+                        <div
+                            class="fade-in delay-5 lg:col-span-2 bg-white p-8 rounded-2xl border border-rose-100 shadow-sm">
                             <!-- Chart Header -->
                             <div class="flex items-center justify-between mb-8">
                                 <div>
                                     <h3 class="text-lg font-bold text-slate-800">Tren Keterlibatan Sistem</h3>
-                                    <p class="text-sm text-slate-400 mt-1">Aktivitas pengguna waktu nyata selama 30 hari</p>
+                                    <p class="text-sm text-slate-400 mt-1">Aktivitas pengguna waktu nyata selama 30
+                                        hari</p>
                                 </div>
                                 <!-- Time range selector -->
-                                <select class="bg-slate-50 border-none rounded-lg text-xs font-bold text-slate-500 px-4 py-2 ring-1 ring-rose-50 focus:ring-2 focus:ring-primary/20"
-                                        aria-label="Pilih rentang waktu">
+                                <select
+                                    class="bg-slate-50 border-none rounded-lg text-xs font-bold text-slate-500 px-4 py-2 ring-1 ring-rose-50 focus:ring-2 focus:ring-primary/20"
+                                    aria-label="Pilih rentang waktu">
                                     <option>30 Hari Terakhir</option>
                                     <option>7 Hari Terakhir</option>
                                     <option>90 Hari Terakhir</option>
@@ -575,29 +611,29 @@
                             </div>
 
                             <!-- SVG Chart -->
-                            <div class="h-64 relative" role="img" aria-label="Line chart showing user engagement trend over 30 days">
-                                <svg class="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 40">
+                            <div class="h-64 relative" role="img"
+                                aria-label="Line chart showing user engagement trend over 30 days">
+                                <svg class="w-full h-full overflow-visible" preserveAspectRatio="none"
+                                    viewBox="0 0 100 40">
                                     <!-- Gradient definition -->
                                     <defs>
-                                        <linearGradient id="chartGradient" x1="0%" x2="0%" y1="0%" y2="100%">
+                                        <linearGradient id="chartGradient" x1="0%" x2="0%"
+                                            y1="0%" y2="100%">
                                             <stop offset="0%" style="stop-color:#FFB7A5;stop-opacity:0.4"></stop>
                                             <stop offset="100%" style="stop-color:#FFB7A5;stop-opacity:0"></stop>
                                         </linearGradient>
                                     </defs>
                                     <!-- Line path dengan animation -->
-                                    <path class="line-animate"
-                                          d="M0 35 Q 10 32, 20 28 T 40 15 T 60 25 T 80 10 T 100 5"
-                                          fill="none"
-                                          stroke="#E35D6A"
-                                          stroke-width="0.5"
-                                          stroke-linecap="round"
-                                          stroke-linejoin="round"></path>
+                                    <path class="line-animate" d="M0 35 Q 10 32, 20 28 T 40 15 T 60 25 T 80 10 T 100 5"
+                                        fill="none" stroke="#E35D6A" stroke-width="0.5" stroke-linecap="round"
+                                        stroke-linejoin="round"></path>
                                     <!-- Area fill -->
                                     <path d="M0 35 Q 10 32, 20 28 T 40 15 T 60 25 T 80 10 T 100 5 L 100 40 L 0 40 Z"
-                                          fill="url(#chartGradient)"></path>
+                                        fill="url(#chartGradient)"></path>
                                 </svg>
                                 <!-- X-axis labels -->
-                                <div class="flex justify-between mt-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider" aria-hidden="true">
+                                <div class="flex justify-between mt-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider"
+                                    aria-hidden="true">
                                     <span>Hari 1</span>
                                     <span>Hari 7</span>
                                     <span>Hari 14</span>
@@ -608,25 +644,27 @@
                         </div>
 
                         <!-- CHART 2: Bar Chart - Volume Prediksi per Fase -->
-                        <div class="fade-in delay-6 bg-white p-8 rounded-2xl border border-rose-100 shadow-sm flex flex-col">
+                        <div
+                            class="fade-in delay-6 bg-white p-8 rounded-2xl border border-rose-100 shadow-sm flex flex-col">
                             <div class="mb-8">
                                 <h3 class="text-lg font-bold text-slate-800">Volume Prediksi</h3>
                                 <p class="text-sm text-slate-400 mt-1">Distribusi berdasarkan fase siklus</p>
                             </div>
 
                             <!-- Bar Chart Container -->
-                            <div class="flex-1 flex items-end justify-between px-4 pb-2 h-64" role="img" aria-label="Bar chart showing prediction volume by cycle phase">
+                            <div class="flex-1 flex items-end justify-between px-4 pb-2 h-64" role="img"
+                                aria-label="Bar chart showing prediction volume by cycle phase">
 
                                 <!-- BAR: Folikel -->
                                 <!-- DATA: 9,420 (konsisten semua halaman) -->
                                 <div class="flex flex-col items-center flex-1 h-full justify-end">
                                     <span class="text-xs font-bold text-primary mb-2">9,420</span>
                                     <div class="w-12 bg-rose-50 rounded-t-2xl relative overflow-hidden transition-all duration-300 hover:bg-rose-100"
-                                         style="height: 60%;"
-                                         data-tooltip="Fase Folikel: 9,420 prediksi">
+                                        style="height: 60%;" data-tooltip="Fase Folikel: 9,420 prediksi">
                                         <div class="absolute bottom-0 w-full bg-primary rounded-t-2xl h-full"></div>
                                     </div>
-                                    <span class="mt-4 text-[10px] text-slate-500 font-bold tracking-widest">FOLIK</span>
+                                    <span
+                                        class="mt-4 text-[10px] text-slate-500 font-bold tracking-widest">FOLIK</span>
                                 </div>
 
                                 <!-- BAR: Ovulasi -->
@@ -634,8 +672,7 @@
                                 <div class="flex flex-col items-center flex-1 h-full justify-end">
                                     <span class="text-xs font-bold text-primary mb-2">14,200</span>
                                     <div class="w-12 bg-rose-50 rounded-t-2xl relative overflow-hidden transition-all duration-300 hover:bg-rose-100"
-                                         style="height: 90%;"
-                                         data-tooltip="Fase Ovulasi: 14,200 prediksi">
+                                        style="height: 90%;" data-tooltip="Fase Ovulasi: 14,200 prediksi">
                                         <div class="absolute bottom-0 w-full bg-primary rounded-t-2xl h-full"></div>
                                     </div>
                                     <span class="mt-4 text-[10px] text-slate-500 font-bold tracking-widest">OVUL</span>
@@ -646,8 +683,7 @@
                                 <div class="flex flex-col items-center flex-1 h-full justify-end">
                                     <span class="text-xs font-bold text-primary mb-2">11,150</span>
                                     <div class="w-12 bg-rose-50 rounded-t-2xl relative overflow-hidden transition-all duration-300 hover:bg-rose-100"
-                                         style="height: 75%;"
-                                         data-tooltip="Fase Luteal: 11,150 prediksi">
+                                        style="height: 75%;" data-tooltip="Fase Luteal: 11,150 prediksi">
                                         <div class="absolute bottom-0 w-full bg-primary rounded-t-2xl h-full"></div>
                                     </div>
                                     <span class="mt-4 text-[10px] text-slate-500 font-bold tracking-widest">LUT</span>
@@ -658,8 +694,7 @@
                                 <div class="flex flex-col items-center flex-1 h-full justify-end">
                                     <span class="text-xs font-bold text-primary mb-2">4,130</span>
                                     <div class="w-12 bg-rose-50 rounded-t-2xl relative overflow-hidden transition-all duration-300 hover:bg-rose-100"
-                                         style="height: 30%;"
-                                         data-tooltip="Fase Menstruasi: 4,130 prediksi">
+                                        style="height: 30%;" data-tooltip="Fase Menstruasi: 4,130 prediksi">
                                         <div class="absolute bottom-0 w-full bg-primary rounded-t-2xl h-full"></div>
                                     </div>
                                     <span class="mt-4 text-[10px] text-slate-500 font-bold tracking-widest">MENS</span>
@@ -686,7 +721,7 @@
                      - Action buttons
                      ======================================== -->
                 <section class="fade-in delay-6 bg-white border border-rose-100 rounded-2xl overflow-hidden shadow-sm"
-                         aria-label="Log Aktivitas Terbaru">
+                    aria-label="Log Aktivitas Terbaru">
 
                     <!-- Table Header -->
                     <div class="p-8 flex items-center justify-between border-b border-rose-50">
@@ -703,7 +738,8 @@
                     <div class="overflow-x-auto">
                         <table class="w-full text-left">
                             <!-- Table Header -->
-                            <thead class="bg-rose-50/30 text-[11px] uppercase tracking-widest text-slate-500 font-bold">
+                            <thead
+                                class="bg-rose-50/30 text-[11px] uppercase tracking-widest text-slate-500 font-bold">
                                 <tr>
                                     <th scope="col" class="px-8 py-4">Tipe Kejadian</th>
                                     <th scope="col" class="px-8 py-4">Identitas Pengguna</th>
@@ -717,7 +753,8 @@
                                 <tr class="table-row-hover">
                                     <td class="px-8 py-5">
                                         <div class="flex items-center gap-3">
-                                            <span class="material-icons-round text-emerald-500" aria-hidden="true">check_circle</span>
+                                            <span class="material-icons-round text-emerald-500"
+                                                aria-hidden="true">check_circle</span>
                                             <div>
                                                 <p class="font-semibold text-slate-800">Siklus Diprediksi</p>
                                                 <p class="text-[10px] text-slate-400 uppercase">
@@ -730,13 +767,15 @@
                                         <code class="font-mono text-xs text-slate-500">USR_88219_GLOBAL</code>
                                     </td>
                                     <td class="px-8 py-5">
-                                        <span class="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase rounded-full border border-emerald-100">
+                                        <span
+                                            class="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase rounded-full border border-emerald-100">
                                             Berhasil
                                         </span>
                                     </td>
                                     <td class="px-8 py-5">
-                                        <button class="text-slate-400 hover:text-primary p-2 rounded-lg hover:bg-rose-50 transition-all"
-                                                aria-label="More actions">
+                                        <button
+                                            class="text-slate-400 hover:text-primary p-2 rounded-lg hover:bg-rose-50 transition-all"
+                                            aria-label="More actions">
                                             <span class="material-icons-round">more_vert</span>
                                         </button>
                                     </td>
@@ -746,7 +785,8 @@
                                 <tr class="table-row-hover">
                                     <td class="px-8 py-5">
                                         <div class="flex items-center gap-3">
-                                            <span class="material-icons-round text-blue-500" aria-hidden="true">person_add</span>
+                                            <span class="material-icons-round text-blue-500"
+                                                aria-hidden="true">person_add</span>
                                             <div>
                                                 <p class="font-semibold text-slate-800">Pendaftaran Pengguna</p>
                                                 <p class="text-[10px] text-slate-400 uppercase">
@@ -759,13 +799,15 @@
                                         <code class="font-mono text-xs text-slate-500">USR_88220_NEW</code>
                                     </td>
                                     <td class="px-8 py-5">
-                                        <span class="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase rounded-full border border-blue-100">
+                                        <span
+                                            class="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase rounded-full border border-blue-100">
                                             Menunggu
                                         </span>
                                     </td>
                                     <td class="px-8 py-5">
-                                        <button class="text-slate-400 hover:text-primary p-2 rounded-lg hover:bg-rose-50 transition-all"
-                                                aria-label="More actions">
+                                        <button
+                                            class="text-slate-400 hover:text-primary p-2 rounded-lg hover:bg-rose-50 transition-all"
+                                            aria-label="More actions">
                                             <span class="material-icons-round">more_vert</span>
                                         </button>
                                     </td>
@@ -775,7 +817,8 @@
                                 <tr class="table-row-hover">
                                     <td class="px-8 py-5">
                                         <div class="flex items-center gap-3">
-                                            <span class="material-icons-round text-primary" aria-hidden="true">report_problem</span>
+                                            <span class="material-icons-round text-primary"
+                                                aria-hidden="true">report_problem</span>
                                             <div>
                                                 <p class="font-semibold text-slate-800">Anomali Prediksi</p>
                                                 <p class="text-[10px] text-slate-400 uppercase">
@@ -788,13 +831,15 @@
                                         <code class="font-mono text-xs text-slate-500">USR_44120_ALERT</code>
                                     </td>
                                     <td class="px-8 py-5">
-                                        <span class="px-3 py-1 bg-rose-50 text-primary text-[10px] font-bold uppercase rounded-full border border-rose-100">
+                                        <span
+                                            class="px-3 py-1 bg-rose-50 text-primary text-[10px] font-bold uppercase rounded-full border border-rose-100">
                                             Peringatan
                                         </span>
                                     </td>
                                     <td class="px-8 py-5">
-                                        <button class="text-slate-400 hover:text-primary p-2 rounded-lg hover:bg-rose-50 transition-all"
-                                                aria-label="More actions">
+                                        <button
+                                            class="text-slate-400 hover:text-primary p-2 rounded-lg hover:bg-rose-50 transition-all"
+                                            aria-label="More actions">
                                             <span class="material-icons-round">more_vert</span>
                                         </button>
                                     </td>
@@ -823,8 +868,8 @@
          ============================================ -->
     <script>
         /* ========================================
-           GLOBAL STATE & CONSTANTS
-           ======================================== */
+                   GLOBAL STATE & CONSTANTS
+                   ======================================== */
         const APP_CONFIG = {
             ANIMATION_DURATION: 300,
             MOBILE_BREAKPOINT: 1024,
@@ -987,4 +1032,5 @@
     </script>
 
 </body>
+
 </html>

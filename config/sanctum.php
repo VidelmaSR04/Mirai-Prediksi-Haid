@@ -80,4 +80,7 @@ return [
         'verify_csrf_token' => App\Http\Middleware\VerifyCsrfToken::class,
     ],
 
+     // PENTING: Set connection ke mongodb
+    'connection' => env('SANCTUM_CONNECTION', 'mongodb'),
+
 ];
