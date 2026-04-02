@@ -8,12 +8,12 @@ use MongoDB\Laravel\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 
-class User extends Authenticatable
+class Admin extends Authenticatable
 {
     use HasFactory, Notifiable;
 
     protected $connection = 'mongodb';
-    protected $collection = 'users';
+    protected $collection = 'admin';
 
 
     protected $fillable = [
