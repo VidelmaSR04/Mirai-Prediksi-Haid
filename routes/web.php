@@ -3,65 +3,24 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ProfileController;
-use App\Models\Cycle;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
-
 // =====================================================
-// HALAMAN UTAMA
+// ROUTE PUBLIK (Tanpa Auth)
 // =====================================================
-
-/**
- * Route untuk halaman utama/landing page
- * Menampilkan welcome.blade.php yang berisi semua sections
- */
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-
-// =====================================================
-// CONTACT FORM
-// =====================================================
-
-/**
- * Route untuk menangani submit form kontak
- * Method: POST
- * Controller: ContactController@submit
- */
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
 
-
-// =====================================================
-// HALAMAN TAMBAHAN (OPSIONAL)
-// =====================================================
-
-/**
- * Route untuk halaman privacy policy
- * Buat view di: resources/views/privacy.blade.php
- */
 Route::get('/privacy', function () {
     return view('privacy');
 })->name('privacy');
 
-/**
- * Route untuk halaman terms & conditions
- * Buat view di: resources/views/terms.blade.php
- */
 Route::get('/terms', function () {
     return view('terms');
 })->name('terms');
-
 
 // =====================================================
 // API ROUTES (JIKA DIPERLUKAN)
@@ -138,18 +97,48 @@ Route::get('/test-mongo', function () {
 /**
  * Route untuk redirect ke App Store
  */
+
 Route::get('/download/ios', function () {
-    // Ganti dengan link App Store yang sebenarnya
     return redirect('https://apps.apple.com/');
 })->name('download.ios');
 
-/**
- * Route untuk redirect ke Play Store
- */
 Route::get('/download/android', function () {
-    // Ganti dengan link Play Store yang sebenarnya
     return redirect('https://play.google.com/store');
 })->name('download.android');
 
 
+
+// =====================================================
+// ROUTE ADMIN (Harus Login)
+// =====================================================
+Route::middleware(['admin'])->group(function () {
+    Route::get('/dashboard', function () {        // ← Pindah ke sini, hapus ['auth','verified']
+        return view('dashboard');
+    })->name('dashboard');
+
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');     // ← Pindah ke sini
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/pengaturan', function () {       // ← Pindah ke sini, sebelumnya tidak terlindungi
+        return view('layouts.admin.pengaturan');
+    })->name('pengaturan');
+
+    Route::get('/test-mongo', function () {       // ← Pindah ke sini, sebelumnya tidak terlindungi
+        \App\Models\Cycle::create([
+            'user_id' => 1,
+            'cycle_length' => 28,
+            'prediction_result' => '2026-04-05'
+        ]);
+        return "Data berhasil masuk MongoDB!";
+    });
+
+    // ← Tambah di sini, hanya admin login yang bisa buat akun admin baru
+    Route::get('/register', [App\Http\Controllers\Auth\RegisteredUserController::class, 'create'])
+                ->name('register');
+    Route::post('/register', [App\Http\Controllers\Auth\RegisteredUserController::class, 'store']);
+});
+
 require __DIR__ . '/auth.php';
+
+
