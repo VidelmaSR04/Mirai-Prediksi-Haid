@@ -13,7 +13,7 @@ class Admin extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $connection = 'mongodb';
-    protected $collection = 'admin';
+    protected $collection = 'admins';
 
 
     protected $fillable = [
