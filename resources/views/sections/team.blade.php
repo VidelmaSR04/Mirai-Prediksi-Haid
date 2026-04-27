@@ -38,7 +38,7 @@
                     <img 
                         alt="Adinda Riski" 
                         class="w-full h-full object-cover group-hover:scale-110 transition-transform" 
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDzeuiOIThMu0CoZsdziQav8HowQIYr0QXO_cECCfRPRqg0eAjPs8Ip-b82QVT-swi955KZ6C2xN3D44k04kTO4Yftnlv5HE9TRbxT-vXoxfKUkKYHubj2tymye2NS8lXZNoMr9G3mxTM-F7FS1Mp9_QgKAgzC3L4c2LbXCq9m1eEvoU7HIyzgsCbNNfKzGYfKC-6--NRkqa5Zyy5sfhfAJr215u6lVweneKsa5Du7T4gxuZWuGTTfH9oR6asIMw16G_Datnkj_pY1i" />
+                        src="{{ asset('img/dinda.jpeg') }}"  />
                 </div>
                 
                 {{-- Member Info --}}
@@ -56,7 +56,7 @@
                     <img 
                         alt="Risky Triana" 
                         class="w-full h-full object-cover group-hover:scale-110 transition-transform" 
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvwX6onLylow1un8iQOmt3XuDryL9mChfJAg59BWzlvf4fR7OdC4K6IqEdllnqrhKzcYDRsTjouu0u32d-4-YTukv1i883ffmhoKi0vUvaLersC6qIyuW-ugN26iDnJrFVLospo2P7a9u7zQE3MCBaAkjT27pTgICHK5l2eqEAYwOeVDTVz9_8EGYIN8rTZqxVub-KgCnuUV46AxuFVxK84q6gwivIRlTNCTTg-Rdi6NQWtveJpPUusi-zSoTnBCTLyLN-sJfDRROC" />
+                        src="{{ asset('img/putri.jpeg') }}"  />
                 </div>
                 
                 {{-- Member Info --}}
@@ -74,7 +74,7 @@
                     <img 
                         alt="Revina" 
                         class="w-full h-full object-cover group-hover:scale-110 transition-transform" 
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOP-z3tM9hvB-BNjBaQLb644NRYvsbtYsAKJ1JNskjVTGcdjB5DPVCmYVHTfe4aa3mr3ec_OnVtBtzUWW3d5YjM6IH5qbfSZf53LEYQH8k9bEM3fdKZo9SyDXdzlkhLebZU_UMjEJjVG9Ra5JrfbvtLtK-ozK9UpTn83N_K8Z-pxhoCdmpjITiUrgzw33RW0H4LpManXifT2_zKX5xEF3H0w6xoPrJE45SJDz_lKDLcbaE2hFYE5D_kXloKT3t53YYSZqB4LiEj-mt" />
+                        src="{{ asset('img/vina.jpeg') }}"  />
                 </div>
                 
                 {{-- Member Info --}}
