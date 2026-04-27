@@ -11,7 +11,7 @@
 
             {{-- Heading --}}
             <h2 class="text-white font-display text-4xl lg:text-5xl font-bold mb-6 relative z-10">
-                Siap menemani perjalanan siklusmu?
+                Siap Memahami Pola Siklusmu Lebih Jelas?
             </h2>
 
             {{-- Description --}}

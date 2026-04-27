@@ -54,13 +54,13 @@
                     </div>
                 </div>
 
-                {{-- Feature 4: Lembut & Mudah Digunakan --}}
+                {{-- Feature 4: Praktis dan Mudah Digunakan --}}
                 <div class="flex gap-6 items-start">
                     <div class="flex-shrink-0 w-14 h-14 bg-soft-mint/40 rounded-2xl flex items-center justify-center text-primary shadow-sm">
                         <span class="material-symbols-outlined text-3xl">calendar_month</span>
                     </div>
                     <div>
-                        <h3 class="text-xl font-bold mb-2">Lembut & Mudah Digunakan</h3>
+                        <h3 class="text-xl font-bold mb-2">Praktis dan Mudah Digunakan</h3>
                         <p class="text-gray-600 dark:text-gray-400">
                             Antarmuka yang sederhana dan menenangkan memudahkan pencatatan siklus, suasana hati, dan kondisi tubuh setiap hari tanpa terasa rumit.
                         </p>
