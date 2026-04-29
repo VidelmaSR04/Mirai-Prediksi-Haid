@@ -20,10 +20,10 @@ return [
         ],
 
         // ========== TAMBAHKAN INI UNTUK API MOBILE ==========
-        'sanctum' => [
-            'driver' => 'sanctum',
-            'provider' => 'users',  // Menggunakan provider users untuk mobile
-        ],
+        //'sanctum' => [
+        //    'driver' => 'sanctum',
+        //    'provider' => 'users',  // Menggunakan provider users untuk mobile
+        //],
     ],
 
     'providers' => [

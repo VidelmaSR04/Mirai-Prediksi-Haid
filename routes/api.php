@@ -5,6 +5,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Models\User;
 use App\Http\Controllers\UserAuthController;
+use App\Http\Controllers\SiklusController;
+use App\Http\Controllers\PrediksiController;
+use App\Http\Controllers\ForgotPasswordController;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 
@@ -86,17 +89,26 @@ Route::get('/test-token', function() {
 
 // ========== ROUTE UNTUK USER MOBILE ==========
 Route::prefix('user')->group(function () {
-    // Public routes (tanpa auth)
     Route::post('/register', [UserAuthController::class, 'register']);
     Route::post('/login', [UserAuthController::class, 'login']);
+    Route::post('/resend-otp', [UserAuthController::class, 'resendOtp']);
+    Route::post('/verify-otp', [UserAuthController::class, 'verifyOtp']);
     
-    // Protected routes (pakai auth via token manual)
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/logout', [UserAuthController::class, 'logout']);
-        Route::get('/profile', [UserAuthController::class, 'profile']);
-        Route::put('/profile', [UserAuthController::class, 'updateProfile']);
-    });
+    Route::post('/logout', [UserAuthController::class, 'logout']);
+    Route::get('/profile', [UserAuthController::class, 'profile']);
+    Route::put('/profile', [UserAuthController::class, 'updateProfile']);
 });
+
+// ========== ROUTE UNTUK CYCLE (SiklusController) ==========
+    Route::post('/cycle', [App\Http\Controllers\SiklusController::class, 'apiStore']);
+    Route::get('/cycles', [App\Http\Controllers\SiklusController::class, 'apiIndex']);
+    Route::get('/cycle/latest', [App\Http\Controllers\SiklusController::class, 'apiLatest']);
+    Route::put('/cycle/{id}', [App\Http\Controllers\SiklusController::class, 'apiUpdate']);
+    Route::delete('/cycle/{id}', [App\Http\Controllers\SiklusController::class, 'apiDestroy']);
+    
+    // ========== ROUTE UNTUK PREDIKSI (PrediksiController) ==========
+    Route::post('/predictions', [App\Http\Controllers\PrediksiController::class, 'predict']);
+    Route::get('/predictions', [App\Http\Controllers\PrediksiController::class, 'history']);
 
 // ========== TEST ROUTES ==========
 Route::get('/test', function() {
@@ -106,6 +118,10 @@ Route::get('/test', function() {
     ]);
 });
 
+// ========== ROUTE UNTUK FORGOT PASSWORD ==========
+Route::post('/forgot-password', [App\Http\Controllers\ForgotPasswordController::class, 'sendOtp']);
+Route::post('/verify-otp', [App\Http\Controllers\ForgotPasswordController::class, 'verifyOtp']);
+Route::post('/reset-password', [App\Http\Controllers\ForgotPasswordController::class, 'resetPassword']);
 Route::get('/test-mongodb', function() {
     try {
         DB::connection('mongodb')->command(['ping' => 1]);
