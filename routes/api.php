@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Models\User;
+use App\Http\Controllers\UserAuthController;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 
@@ -79,6 +80,56 @@ Route::get('/test-token', function() {
         return response()->json([
             'success' => false,
             'message' => $e->getMessage()
+        ], 500);
+    }
+});
+
+// ========== ROUTE UNTUK USER MOBILE ==========
+Route::prefix('user')->group(function () {
+    // Public routes (tanpa auth)
+    Route::post('/register', [UserAuthController::class, 'register']);
+    Route::post('/login', [UserAuthController::class, 'login']);
+    
+    // Protected routes (pakai auth via token manual)
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/logout', [UserAuthController::class, 'logout']);
+        Route::get('/profile', [UserAuthController::class, 'profile']);
+        Route::put('/profile', [UserAuthController::class, 'updateProfile']);
+    });
+});
+
+// ========== TEST ROUTES ==========
+Route::get('/test', function() {
+    return response()->json([
+        'message' => 'API is working!',
+        'status' => 'success'
+    ]);
+});
+
+Route::get('/test-mongodb', function() {
+    try {
+        DB::connection('mongodb')->command(['ping' => 1]);
+        
+        $user = User::create([
+            'name' => 'Test User',
+            'email' => 'test' . time() . '@example.com',
+            'password' => Hash::make('password123'),
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'MongoDB connected successfully!',
+            'test_user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email
+            ]
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'MongoDB connection failed: ' . $e->getMessage()
         ], 500);
     }
 });

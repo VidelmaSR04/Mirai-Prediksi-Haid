@@ -7,7 +7,7 @@ return [
     ],
 
     'guards' => [
-        // Untuk user biasa (Breeze bawaan)
+        // Untuk user biasa (Breeze bawaan) - WEB
         'web' => [
             'driver'   => 'session',
             'provider' => 'users',
@@ -17,6 +17,12 @@ return [
         'admin' => [
             'driver'   => 'session',
             'provider' => 'admins',
+        ],
+
+        // ========== TAMBAHKAN INI UNTUK API MOBILE ==========
+        'sanctum' => [
+            'driver' => 'sanctum',
+            'provider' => 'users',  // Menggunakan provider users untuk mobile
         ],
     ],
 
