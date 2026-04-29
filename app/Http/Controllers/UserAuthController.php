@@ -3,15 +3,33 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\EmailVerification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
 
 class UserAuthController extends Controller
 {
     /**
-     * Generate token manual sederhana
+     * Generate OTP 6 digit
+     */
+    private function generateOtp()
+    {
+        return str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Generate token unik untuk verifikasi
+     */
+    private function generateVerificationToken()
+    {
+        return Str::random(60);
+    }
+
+    /**
+     * Generate token manual untuk login
      */
     private function generateToken($user)
     {
@@ -43,7 +61,8 @@ class UserAuthController extends Controller
     }
 
     /**
-     * Register user dari mobile
+     * Register user dari mobile (dengan OTP)
+     * POST /api/user/register
      */
     public function register(Request $request)
     {
@@ -58,22 +77,39 @@ class UserAuthController extends Controller
             $lastUser = User::orderBy('id_user', 'desc')->first();
             $nextId = $lastUser ? $lastUser->id_user + 1 : 1;
 
+            // Generate OTP dan token verifikasi
+            $otp = $this->generateOtp();
+            $verificationToken = $this->generateVerificationToken();
+
+            // Simpan user dengan status belum terverifikasi
             $user = User::create([
                 'id_user' => $nextId,
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
-                'status' => 'Aktif',
+                'status' => 'Menunggu Verifikasi',
+                'email_verified' => false,
+                'verification_token' => $verificationToken,
                 'created_at' => now(),
                 'nama_lengkap' => $request->name,
             ]);
 
-            // Generate token manual (tanpa Sanctum)
-            $token = $this->generateToken($user);
+            // Simpan OTP ke collection email_verifications
+            EmailVerification::updateOrCreate(
+                ['email' => $request->email],
+                [
+                    'otp' => $otp,
+                    'token' => $verificationToken,
+                    'expires_at' => now()->addMinutes(15),
+                ]
+            );
+
+            // Log OTP untuk development (hapus di production)
+            Log::info('OTP untuk ' . $request->email . ': ' . $otp);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Registrasi berhasil',
+                'message' => 'Registrasi berhasil. Silakan verifikasi email Anda.',
                 'data' => [
                     'user' => [
                         'id_user' => $user->id_user,
@@ -81,7 +117,7 @@ class UserAuthController extends Controller
                         'email' => $user->email,
                         'status' => $user->status,
                     ],
-                    'token' => $token
+                    'verification_token' => $verificationToken,
                 ]
             ], 201);
 
@@ -101,7 +137,155 @@ class UserAuthController extends Controller
     }
 
     /**
+     * Resend OTP
+     * POST /api/user/resend-otp
+     */
+    public function resendOtp(Request $request)
+    {
+        try {
+            $request->validate([
+                'email' => 'required|email'
+            ]);
+
+            $user = User::where('email', $request->email)->first();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email tidak terdaftar'
+                ], 404);
+            }
+
+            if ($user->email_verified) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email sudah terverifikasi'
+                ], 400);
+            }
+
+            // Generate OTP baru
+            $otp = $this->generateOtp();
+            $verificationToken = $this->generateVerificationToken();
+
+            // Update OTP di database
+            EmailVerification::updateOrCreate(
+                ['email' => $request->email],
+                [
+                    'otp' => $otp,
+                    'token' => $verificationToken,
+                    'expires_at' => now()->addMinutes(15),
+                ]
+            );
+
+            // Update user verification token
+            $user->verification_token = $verificationToken;
+            $user->save();
+
+            // Log OTP untuk development
+            Log::info('Resend OTP untuk ' . $request->email . ': ' . $otp);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Kode OTP telah dikirim ulang',
+                'data' => [
+                    'verification_token' => $verificationToken,
+                ]
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Resend OTP error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengirim ulang OTP'
+            ], 500);
+        }
+    }
+
+    /**
+     * Verify OTP
+     * POST /api/user/verify-otp
+     */
+    public function verifyOtp(Request $request)
+    {
+        try {
+            $request->validate([
+                'email' => 'required|email',
+                'otp' => 'required|string|size:6',
+            ]);
+
+            $verification = EmailVerification::where('email', $request->email)
+                ->where('otp', $request->otp)
+                ->first();
+
+            if (!$verification) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kode OTP tidak valid'
+                ], 400);
+            }
+
+            // Cek expired (15 menit)
+            if (now()->isAfter($verification->expires_at)) {
+                $verification->delete();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kode OTP sudah kadaluarsa'
+                ], 400);
+            }
+
+            // Update user menjadi verified
+            $user = User::where('email', $request->email)->first();
+            $user->email_verified = true;
+            $user->status = 'Aktif';
+            $user->save();
+
+            // Generate token untuk login (manual)
+            $token = $this->generateToken($user);
+
+            // Hapus verification data
+            $verification->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email berhasil diverifikasi',
+                'data' => [
+                    'user' => [
+                        'id_user' => $user->id_user,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'status' => $user->status,
+                        'nama_lengkap' => $user->nama_lengkap,
+                        'no_telepon' => $user->no_telepon,
+                        'age' => $user->age,
+                    ],
+                    'token' => $token
+                ]
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Verify OTP error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal verifikasi OTP: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Login user dari mobile
+     * POST /api/user/login
      */
     public function login(Request $request)
     {
@@ -125,6 +309,14 @@ class UserAuthController extends Controller
                     'success' => false,
                     'message' => 'Password salah'
                 ], 401);
+            }
+
+            // Cek apakah email sudah diverifikasi
+            if (!$user->email_verified) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email belum diverifikasi. Silakan cek email Anda untuk kode OTP.'
+                ], 403);
             }
 
             // Cek status akun
@@ -172,11 +364,10 @@ class UserAuthController extends Controller
 
     /**
      * Logout user
+     * POST /api/user/logout
      */
     public function logout(Request $request)
     {
-        // Dengan token manual, logout cukup dari sisi client
-        // Server hanya return success
         return response()->json([
             'success' => true,
             'message' => 'Logout berhasil'
@@ -185,6 +376,7 @@ class UserAuthController extends Controller
 
     /**
      * Get profile user
+     * GET /api/user/profile
      */
     public function profile(Request $request)
     {
@@ -224,6 +416,7 @@ class UserAuthController extends Controller
                         'name' => $user->name,
                         'email' => $user->email,
                         'status' => $user->status,
+                        'email_verified' => $user->email_verified,
                         'nama_lengkap' => $user->nama_lengkap,
                         'no_telepon' => $user->no_telepon,
                         'age' => $user->age,
@@ -244,6 +437,7 @@ class UserAuthController extends Controller
 
     /**
      * Update profile user (untuk onboarding)
+     * PUT /api/user/profile
      */
     public function updateProfile(Request $request)
     {
