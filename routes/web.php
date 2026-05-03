@@ -35,9 +35,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // ── Halaman Utama ──────────────────────────────
        Route::get('/dashboard', fn() => view('admin.dashboard.index'))->name('dashboard');
-        Route::get('/siklus',    fn() => view('admin.siklus.index'))->name('siklus');
-        Route::get('/prediksi',  fn() => view('admin.prediksi.index'))->name('prediksi');
-        Route::get('/analitik',  fn() => view('admin.analitik.index'))->name('analitik');
+        Route::get('/siklus', [\App\Http\Controllers\SiklusController::class, 'index'])->name('siklus');
+        Route::get('/prediksi', [\App\Http\Controllers\PrediksiController::class, 'index'])->name('prediksi');
+       Route::get('/analitik', [\App\Http\Controllers\AnalitikController::class, 'index'])->name('analitik');
 
 
         // ── Register Admin Baru (hanya bisa dibuat oleh admin) ──
