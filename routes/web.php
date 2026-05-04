@@ -37,6 +37,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // ← INI YANG DIPERBAIKI
         Route::get('/siklus', [App\Http\Controllers\SiklusController::class, 'index'])->name('siklus');
+        // ── Halaman Utama ──────────────────────────────
+       Route::get('/dashboard', fn() => view('admin.dashboard.index'))->name('dashboard');
+        Route::get('/siklus', [\App\Http\Controllers\SiklusController::class, 'index'])->name('siklus');
+        Route::get('/prediksi', [\App\Http\Controllers\PrediksiController::class, 'index'])->name('prediksi');
+       Route::get('/analitik', [\App\Http\Controllers\AnalitikController::class, 'index'])->name('analitik');
 
         Route::get('/prediksi', [App\Http\Controllers\PrediksiController::class, 'index'])->name('prediksi');
         Route::get('/analitik', [App\Http\Controllers\AnalitikController::class, 'index'])->name('analitik');

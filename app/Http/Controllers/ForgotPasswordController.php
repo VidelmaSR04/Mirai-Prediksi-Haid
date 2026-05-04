@@ -38,6 +38,7 @@ class ForgotPasswordController extends Controller
             // Save OTP to database
             PasswordReset::where('email', $request->email)->delete();
 
+            
             PasswordReset::create([
                 'email' => $request->email,
                 'token' => $token,
@@ -171,4 +172,5 @@ class ForgotPasswordController extends Controller
             ], 500);
         }
     }
+}
 }
