@@ -7,7 +7,7 @@
 
 @if(isset($error))
 <div class="mb-5 flex items-center gap-3 bg-rose-50 border border-rose-200 text-rose-700 px-5 py-3 rounded-xl text-sm font-semibold">
-    <span class="material-symbols-outlined text-primary">error</span>{{ $error }}
+    <span class="material-symbols-outlined text-primary">error</span> {{ $error }}
 </div>
 @endif
 
@@ -32,12 +32,12 @@
             </div>
         </div>
 
-        {{-- Distribusi fase --}}
-        <div class="grid grid-cols-4 gap-3 mt-6">
+        {{-- Distribusi Fase --}}
+        <div class="grid grid-cols-5 gap-3 mt-8">
             @foreach($distribusi ?? [] as $fase => $jumlah)
-            <div class="bg-white rounded-xl p-3 text-center border border-rose-100">
-                <p class="text-lg font-bold text-slate-800">{{ $jumlah }}</p>
-                <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-0.5">{{ $fase }}</p>
+            <div class="bg-white rounded-xl p-4 text-center border border-rose-100">
+                <p class="text-2xl font-bold text-slate-800">{{ $jumlah }}</p>
+                <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mt-1">{{ $fase }}</p>
             </div>
             @endforeach
         </div>
@@ -45,7 +45,7 @@
 
     <div class="bg-white p-7 rounded-2xl border border-rose-100 shadow-sm">
         <h4 class="text-base font-bold text-slate-800 mb-4">Distribusi Fase</h4>
-        <canvas id="faseChart" height="200"></canvas>
+        <canvas id="faseChart" height="220"></canvas>
     </div>
 </div>
 
@@ -61,10 +61,24 @@
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" style="font-size:18px">search</span>
                 <input type="text" name="search" value="{{ $search ?? '' }}"
                        placeholder="Cari nama..."
-                       class="pl-9 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none w-48"
+                       class="pl-9 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none w-64"
                        onchange="this.form.submit()"/>
             </div>
         </form>
+    </div>
+
+    <!-- BARU: Filter Fase -->
+    <div class="px-7 pb-5 pt-2 flex flex-wrap gap-2 border-b border-rose-50">
+        <a href="{{ route('admin.siklus') }}"
+           class="px-5 py-2 text-sm rounded-2xl transition-all {{ empty($filterPhase) ? 'bg-primary text-white shadow-sm' : 'bg-white border border-slate-200 hover:bg-slate-50' }}">
+           Semua Fase
+        </a>
+        @foreach(['Folikel', 'Ovulasi', 'Luteal', 'Menstruasi'] as $fase)
+        <a href="{{ request()->fullUrlWithQuery(['fase' => $fase]) }}"
+           class="px-5 py-2 text-sm rounded-2xl transition-all {{ $filterPhase === $fase ? 'bg-primary text-white shadow-sm' : 'bg-white border border-slate-200 hover:bg-slate-50' }}">
+           {{ $fase }}
+        </a>
+        @endforeach
     </div>
 
     <div class="overflow-x-auto">
@@ -82,42 +96,23 @@
                     <th class="px-5 py-4 text-center">Status</th>
                 </tr>
             </thead>
-           <tbody class="divide-y divide-rose-50 text-sm">
-@forelse($pageSiklus ?? [] as $s)
+            <tbody class="divide-y divide-rose-50 text-sm">
+            @forelse($pageSiklus ?? [] as $s)
+                @php
+                    $panjang = (int)($s['panjang_siklus'] ?? 0);
+                    $isNormal = $panjang >= 21 && $panjang <= 35;
 
-@php
-    // Panjang siklus (SUDAH FIX alias)
-    $panjang = isset($s['panjang_siklus']) ? (int)$s['panjang_siklus'] : 0;
+                    $faseRaw = strtolower(trim($s['current_phase'] ?? ''));
+                    $fase = ucfirst($faseRaw ?: 'Lainnya');
 
-    // Status normal
-    $isNormal = $panjang >= 21 && $panjang <= 35;
-
-    // Fase (AMANKAN dulu sebelum dipakai)
-    $faseRaw = $s['current_phase'] ?? ($s['pattern'] ?? '');
-    $faseKey = strtolower(trim($faseRaw));
-
-    // Default fase tampil
-    $fase = $faseKey ? ucfirst($faseKey) : '-';
-
-    // Warna fase (ANTI ERROR)
-    switch ($faseKey) {
-        case 'menstruasi':
-            $faseColor = 'bg-red-50 text-red-500 border-red-100';
-            break;
-        case 'folikel':
-            $faseColor = 'bg-amber-50 text-amber-600 border-amber-100';
-            break;
-        case 'ovulasi':
-            $faseColor = 'bg-emerald-50 text-emerald-600 border-emerald-100';
-            break;
-        case 'luteal':
-            $faseColor = 'bg-violet-50 text-violet-600 border-violet-100';
-            break;
-        default:
-            $faseColor = 'bg-slate-50 text-slate-500 border-slate-100';
-            break;
-    }
-@endphp
+                    $faseColor = match($faseRaw) {
+                        'folikel' => 'bg-amber-50 text-amber-600 border-amber-100',
+                        'ovulasi', 'ovulation' => 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                        'luteal' => 'bg-violet-50 text-violet-600 border-violet-100',
+                        'menstruasi' => 'bg-red-50 text-red-600 border-red-100',
+                        default => 'bg-slate-50 text-slate-500 border-slate-100'
+                    };
+                @endphp
                 <tr class="hover:bg-rose-50/10 transition-colors">
                     <td class="px-7 py-4">
                         <div class="flex items-center gap-3">
@@ -130,42 +125,34 @@
                             </div>
                         </div>
                     </td>
-                    <td class="px-5 py-4 text-slate-600">{{ $s['tanggal_mulai_haid']   ?? '-' }}</td>
+                    <td class="px-5 py-4 text-slate-600">{{ $s['tanggal_mulai_haid'] ?? '-' }}</td>
                     <td class="px-5 py-4 text-slate-600">{{ $s['tanggal_selesai_haid'] ?? '-' }}</td>
                     <td class="px-5 py-4 text-center font-bold text-slate-700">
-                        {{ $panjang > 0 ? $panjang.' hari' : '-' }}
+                        {{ $panjang > 0 ? $panjang . ' hari' : '-' }}
                     </td>
+                    <td class="px-5 py-4 text-center">{{ $s['pain_level'] ?? '-' }}</td>
+                    <td class="px-5 py-4 text-center">{{ $s['stress_score_cycle'] ?? '-' }}</td>
+                    <td class="px-5 py-4 text-center">{{ $s['sleep_hours_cycle'] ?? '-' }}</td>
                     <td class="px-5 py-4 text-center">
-                        @php $pain = (int)($s['pain_level'] ?? 0); @endphp
-                        <div class="flex items-center justify-center gap-1">
-                            <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                <div class="h-full bg-primary rounded-full" style="width:{{ $pain * 10 }}%"></div>
-                            </div>
-                            <span class="text-xs text-slate-500">{{ $pain }}</span>
-                        </div>
-                    </td>
-                    <td class="px-5 py-4 text-center text-slate-600">{{ $s['stress_score_cycle'] ?? '-' }}</td>
-                    <td class="px-5 py-4 text-center text-slate-600">{{ $s['sleep_hours_cycle']  ?? '-' }}</td>
-                    <td class="px-5 py-4 text-center">
-                        <span class="px-2.5 py-1 text-[10px] font-bold uppercase rounded-full border {{ $faseColor }}">
+                        <span class="px-3 py-1 text-xs font-bold rounded-full border {{ $faseColor }}">
                             {{ $fase }}
                         </span>
                     </td>
                     <td class="px-5 py-4 text-center">
-                        <span class="px-3 py-1 text-[10px] font-bold uppercase rounded-full border
-                            {{ $isNormal ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-primary border-rose-100' }}">
+                        <span class="px-3 py-1 text-xs font-bold rounded-full border
+                            {{ $isNormal ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100' }}">
                             {{ $isNormal ? 'Normal' : 'Tidak Normal' }}
                         </span>
                     </td>
                 </tr>
-                @empty
+            @empty
                 <tr>
-                    <td colspan="9" class="px-7 py-16 text-center text-slate-400">
-                        <span class="material-symbols-outlined text-4xl text-slate-300 block mb-2">calendar_month</span>
+                    <td colspan="9" class="px-7 py-20 text-center text-slate-400">
+                        <span class="material-symbols-outlined text-5xl block mb-3 opacity-50">calendar_month</span>
                         Belum ada data siklus
                     </td>
                 </tr>
-                @endforelse
+            @endforelse
             </tbody>
         </table>
     </div>
@@ -173,27 +160,28 @@
     {{-- Pagination --}}
     <div class="px-7 py-5 border-t border-rose-50 flex items-center justify-between flex-wrap gap-3">
         <p class="text-xs text-slate-400">
-            Menampilkan {{ (($currentPage ?? 1)-1)*10+1 }}–{{ min(($currentPage ?? 1)*10, $total ?? 0) }}
+            Menampilkan {{ (($currentPage ?? 1)-1)*10 + 1 }}–{{ min(($currentPage ?? 1)*10, $total ?? 0) }}
             dari {{ number_format($total ?? 0) }} data
         </p>
         <div class="flex items-center gap-2">
             @if(($currentPage ?? 1) > 1)
-            <a href="{{ request()->fullUrlWithQuery(['page'=>($currentPage-1)]) }}"
-               class="w-9 h-9 flex items-center justify-center rounded-xl border border-rose-100 text-slate-400 hover:bg-rose-50 hover:text-primary transition-all">
-                <span class="material-symbols-outlined">chevron_left</span>
+            <a href="{{ request()->fullUrlWithQuery(['page' => $currentPage-1]) }}"
+               class="w-9 h-9 flex items-center justify-center rounded-xl border border-rose-100 hover:bg-rose-50">
+                ‹
             </a>
             @endif
+
             @for($i = max(1, ($currentPage ?? 1)-2); $i <= min($totalPages ?? 1, ($currentPage ?? 1)+2); $i++)
-            <a href="{{ request()->fullUrlWithQuery(['page'=>$i]) }}"
-               class="w-9 h-9 flex items-center justify-center rounded-xl font-bold text-sm transition-all
-                      {{ $i === ($currentPage ?? 1) ? 'bg-primary text-white shadow-md shadow-primary/20' : 'border border-rose-100 text-slate-600 hover:bg-rose-50' }}">
+            <a href="{{ request()->fullUrlWithQuery(['page' => $i]) }}"
+               class="w-9 h-9 flex items-center justify-center rounded-xl font-medium {{ $i === ($currentPage ?? 1) ? 'bg-primary text-white' : 'border border-rose-100 hover:bg-rose-50' }}">
                 {{ $i }}
             </a>
             @endfor
+
             @if(($currentPage ?? 1) < ($totalPages ?? 1))
-            <a href="{{ request()->fullUrlWithQuery(['page'=>($currentPage+1)]) }}"
-               class="w-9 h-9 flex items-center justify-center rounded-xl border border-rose-100 text-slate-400 hover:bg-rose-50 hover:text-primary transition-all">
-                <span class="material-symbols-outlined">chevron_right</span>
+            <a href="{{ request()->fullUrlWithQuery(['page' => $currentPage+1]) }}"
+               class="w-9 h-9 flex items-center justify-center rounded-xl border border-rose-100 hover:bg-rose-50">
+                ›
             </a>
             @endif
         </div>
@@ -213,15 +201,20 @@ if (Object.keys(distribusi).length > 0) {
             labels: Object.keys(distribusi),
             datasets: [{
                 data: Object.values(distribusi),
-                backgroundColor: ['#FFB7A5','#E35D6A','#7C3AED','#F59E0B'],
-                borderWidth: 2,
+                backgroundColor: ['#FFB7A5', '#E35D6A', '#7C3AED', '#F59E0B', '#64748B'],
+                borderWidth: 3,
                 borderColor: '#fff'
             }]
         },
         options: {
             responsive: true,
-            cutout: '60%',
-            plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }
+            cutout: '65%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { font: { size: 12 }, padding: 20 }
+                }
+            }
         }
     });
 }
