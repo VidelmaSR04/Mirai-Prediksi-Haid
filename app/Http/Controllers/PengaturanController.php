@@ -12,7 +12,6 @@ class PengaturanController extends Controller
     public function index()
     {
         $admin = auth('admin')->user();
-        // ✅ View path benar — sesuai file: resources/views/admin/pengaturan/index.blade.php
         return view('admin.pengaturan.index', compact('admin'));
     }
 

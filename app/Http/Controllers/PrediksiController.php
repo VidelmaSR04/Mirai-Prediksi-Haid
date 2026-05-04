@@ -19,89 +19,74 @@ class PrediksiController extends Controller
         try {
             $db = $this->getDb();
 
-            // ── User map ─────────────────────────────────────────────────────
+            // Ambil data users untuk nama
             $userMap = [];
             foreach ($db->selectCollection('users')->find([]) as $doc) {
                 $doc = (array) $doc;
-                $userMap[$doc['id_user'] ?? 0] = $doc;
+                $userMap[(int)$doc['id_user']] = $doc['nama_lengkap'] ?? 'User #' . $doc['id_user'];
             }
 
-            // ── Cycle map (latest per user) ───────────────────────────────────
-            $cycleMap = [];
-            foreach ($db->selectCollection('cycles')->find([]) as $doc) {
-                $doc = (array) $doc;
-                $uid = $doc['id_user'] ?? 0;
-                // Simpan yang terbaru berdasarkan tanggal_mulai_haid
-                if (!isset($cycleMap[$uid]) ||
-                    ($doc['tanggal_mulai_haid'] ?? '') > ($cycleMap[$uid]['tanggal_mulai_haid'] ?? '')) {
-                    $cycleMap[$uid] = $doc;
-                }
-            }
+            // Ambil semua prediksi
+            $prediksiRaw = iterator_to_array($db->selectCollection('predictions')->find([], [
+                'sort' => ['created_at' => -1]
+            ]));
 
-            // ── Prediksi ─────────────────────────────────────────────────────
-            $prediksiRaw = [];
-            foreach ($db->selectCollection('predictions')->find([], ['sort' => ['created_at' => -1]]) as $doc) {
-                $prediksiRaw[] = (array) $doc;
-            }
-
-            // Gabungkan dengan data user & cycle untuk blade
             $prediksi = [];
             foreach ($prediksiRaw as $p) {
-                $uid    = $p['id_user'] ?? 0;
-                $u      = $userMap[$uid]   ?? [];
-                $c      = $cycleMap[$uid]  ?? [];
+                $p = (array) $p;
+                $uid = (int)($p['id_user'] ?? 0);
 
                 $prediksi[] = [
-                    'id_user'              => $uid,
-                    'nama'                 => $u['nama_lengkap']         ?? '-',
-                    'usia'                 => $u['age']                  ?? '-',     // field baru
-                    'panjang_siklus'       => $c['cycle_length_days']    ?? '-',     // field baru
-                    'pattern'              => $p['current_phase']        ?? '-',
-                    'ovulasi'              => $p['predicted_ovulation']  ?? '-',
-                    'tanggal_mulai_haid'   => $p['predicted_next_period'] ?? '-',
-                    'fertile_start'        => $p['fertile_start']        ?? '-',
-                    'fertile_end'          => $p['fertile_end']          ?? '-',
-                    'confidence_score'     => $p['confidence_score']     ?? '-',
-                    'mae_error'            => $p['mae_error']            ?? '-',
-                    'cycle_status'         => $p['cycle_status']         ?? '-',
-
-                    // Untuk detail prediksi
-                    'predicted_next_period'  => $p['predicted_next_period']  ?? '-',
-                    'predicted_ovulation'    => $p['predicted_ovulation']    ?? '-',
-                    'predicted_cycle_length' => $p['predicted_cycle_length'] ?? '-',
+                    'id_user'                => $uid,
+                    'nama'                   => $userMap[$uid] ?? '-',
+                    'usia'                   => '-', // nanti bisa diambil dari users
+                    'panjang_siklus'         => $p['predicted_cycle_length'] ?? $p['cycle_length_used'] ?? '-',
+                    'pattern'                => $p['current_phase'] ?? '-',
+                    'ovulasi'                => $p['predicted_ovulation'] ?? '-',
+                    'tanggal_mulai_haid'     => $p['predicted_next_period'] ?? '-',
+                    'fertile_start'          => $p['fertile_start'] ?? '-',
+                    'fertile_end'            => $p['fertile_end'] ?? '-',
+                    'confidence_score'       => (int)($p['confidence_score'] ?? 0),
+                    'mae_error'              => round($p['mae_error'] ?? 0, 2),
+                    'cycle_status'           => $p['cycle_status'] ?? '-',
                 ];
             }
 
-            // ── Stats distribusi fase ────────────────────────────────────────
+            $totalPrediksi = count($prediksi);
+
+            // Distribusi fase
             $faseCount = ['folikel' => 0, 'ovulasi' => 0, 'luteal' => 0, 'menstruasi' => 0];
             foreach ($prediksi as $p) {
                 $f = strtolower($p['pattern'] ?? '');
-                if (isset($faseCount[$f])) $faseCount[$f]++;
+                if (isset($faseCount[$f])) {
+                    $faseCount[$f]++;
+                }
             }
 
-            // ── KPI ──────────────────────────────────────────────────────────
-            $totalPrediksi = count($prediksi);
-            $normalCount   = count(array_filter($prediksi, fn($p) => ($p['cycle_status'] ?? '') === 'normal'));
-            $avgConf       = $totalPrediksi
+            // Stats
+            $avgConf = $totalPrediksi > 0
                 ? round(array_sum(array_column($prediksi, 'confidence_score')) / $totalPrediksi, 1)
                 : 0;
 
-            // Sedang subur = fase ovulasi hari ini
             $sedangSubur = $faseCount['ovulasi'] ?? 0;
 
             return view('admin.prediksi.index', compact(
-                'prediksi', 'faseCount', 'totalPrediksi', 'avgConf', 'sedangSubur'
+                'prediksi',
+                'faseCount',
+                'totalPrediksi',
+                'avgConf',
+                'sedangSubur'
             ));
 
         } catch (\Exception $e) {
             Log::error('PrediksiController@index: ' . $e->getMessage());
             return view('admin.prediksi.index', [
-                'prediksi'       => [],
-                'faseCount'      => ['folikel' => 0, 'ovulasi' => 0, 'luteal' => 0, 'menstruasi' => 0],
-                'totalPrediksi'  => 0,
-                'avgConf'        => 0,
-                'sedangSubur'    => 0,
-                'error'          => $e->getMessage(),
+                'prediksi'      => [],
+                'faseCount'     => ['folikel'=>0,'ovulasi'=>0,'luteal'=>0,'menstruasi'=>0],
+                'totalPrediksi' => 0,
+                'avgConf'       => 0,
+                'sedangSubur'   => 0,
+                'error'         => 'Gagal memuat data prediksi: ' . $e->getMessage()
             ]);
         }
     }
