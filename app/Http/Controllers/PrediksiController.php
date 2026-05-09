@@ -19,55 +19,6 @@ class PrediksiController extends Controller
         try {
             $db = $this->getDb();
 
-            // Ambil data users untuk nama
-            $userMap = [];
-            foreach ($db->selectCollection('users')->find([]) as $doc) {
-                $doc = (array) $doc;
-                $userMap[(int)$doc['id_user']] = $doc['nama_lengkap'] ?? 'User #' . $doc['id_user'];
-            }
-
-            // Ambil semua prediksi
-            $prediksiRaw = iterator_to_array($db->selectCollection('predictions')->find([], [
-                'sort' => ['created_at' => -1]
-            ]));
-
-            $prediksi = [];
-            foreach ($prediksiRaw as $p) {
-                $p = (array) $p;
-                $uid = (int)($p['id_user'] ?? 0);
-
-                $prediksi[] = [
-                    'id_user'                => $uid,
-                    'nama'                   => $userMap[$uid] ?? '-',
-                    'usia'                   => '-', // nanti bisa diambil dari users
-                    'panjang_siklus'         => $p['predicted_cycle_length'] ?? $p['cycle_length_used'] ?? '-',
-                    'pattern'                => $p['current_phase'] ?? '-',
-                    'ovulasi'                => $p['predicted_ovulation'] ?? '-',
-                    'tanggal_mulai_haid'     => $p['predicted_next_period'] ?? '-',
-                    'fertile_start'          => $p['fertile_start'] ?? '-',
-                    'fertile_end'            => $p['fertile_end'] ?? '-',
-                    'confidence_score'       => (int)($p['confidence_score'] ?? 0),
-                    'mae_error'              => round($p['mae_error'] ?? 0, 2),
-                    'cycle_status'           => $p['cycle_status'] ?? '-',
-                ];
-            }
-
-            $totalPrediksi = count($prediksi);
-
-            // Distribusi fase
-            $faseCount = ['folikel' => 0, 'ovulasi' => 0, 'luteal' => 0, 'menstruasi' => 0];
-            foreach ($prediksi as $p) {
-                $f = strtolower($p['pattern'] ?? '');
-                if (isset($faseCount[$f])) {
-                    $faseCount[$f]++;
-                }
-            }
-
-            // Stats
-            $avgConf = $totalPrediksi > 0
-                ? round(array_sum(array_column($prediksi, 'confidence_score')) / $totalPrediksi, 1)
-                : 0;
-
             $userMap = [];
             foreach ($db->selectCollection('users')->find([]) as $doc) {
                 $doc = (array) $doc;
@@ -82,9 +33,11 @@ class PrediksiController extends Controller
                 if (!$uid) continue;
                 $currentDate  = strtotime($doc['tanggal_mulai_haid'] ?? '0');
                 $existingDate = isset($cycleMap[$uid])
-                    ? strtotime($cycleMap[$uid]['tanggal_mulai_haid'] ?? '0') : 0;
-                if (!isset($cycleMap[$uid]) || $currentDate > $existingDate)
+                    ? strtotime($cycleMap[$uid]['tanggal_mulai_haid'] ?? '0')
+                    : 0;
+                if (!isset($cycleMap[$uid]) || $currentDate > $existingDate) {
                     $cycleMap[$uid] = $doc;
+                }
             }
 
             $seenUsers   = [];
@@ -101,10 +54,8 @@ class PrediksiController extends Controller
             foreach ($prediksiRaw as $p) {
                 $uid = (string) ($p['id_user'] ?? '');
                 if (!$uid) continue;
-
                 $u = $userMap[$uid] ?? [];
                 $c = $cycleMap[$uid] ?? [];
-
                 $prediksi[] = [
                     'id_user'                => $uid,
                     'nama'                   => $u['nama_lengkap']           ?? 'User ' . $uid,
@@ -132,12 +83,13 @@ class PrediksiController extends Controller
             }
 
             $totalPrediksi = count($prediksi);
-            $confValues    = array_filter(
+            $confValues = array_filter(
                 array_column($prediksi, 'confidence_score'),
                 fn($v) => is_numeric($v)
             );
-            $avgConf     = count($confValues)
-                ? round(array_sum($confValues) / count($confValues), 1) : 0;
+            $avgConf = count($confValues)
+                ? round(array_sum($confValues) / count($confValues), 1)
+                : 0;
             $sedangSubur = $faseCount['ovulasi'] ?? 0;
 
             return view('admin.prediksi.index', compact(
@@ -152,11 +104,6 @@ class PrediksiController extends Controller
             Log::error('PrediksiController@index: ' . $e->getMessage());
             return view('admin.prediksi.index', [
                 'prediksi'      => [],
-                'faseCount'     => ['folikel'=>0,'ovulasi'=>0,'luteal'=>0,'menstruasi'=>0],
-                'totalPrediksi' => 0,
-                'avgConf'       => 0,
-                'sedangSubur'   => 0,
-                'error'         => 'Gagal memuat data prediksi: ' . $e->getMessage()
                 'faseCount'     => ['folikel' => 0, 'ovulasi' => 0, 'luteal' => 0, 'menstruasi' => 0],
                 'totalPrediksi' => 0,
                 'avgConf'       => 0,
