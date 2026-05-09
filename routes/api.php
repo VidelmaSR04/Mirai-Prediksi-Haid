@@ -107,8 +107,10 @@ Route::prefix('user')->group(function () {
     Route::delete('/cycle/{id}', [App\Http\Controllers\SiklusController::class, 'apiDestroy']);
     
     // ========== ROUTE UNTUK PREDIKSI (PrediksiController) ==========
-    Route::post('/predictions', [App\Http\Controllers\PrediksiController::class, 'predict']);
-    Route::get('/predictions', [App\Http\Controllers\PrediksiController::class, 'history']);
+Route::post('/predictions', [App\Http\Controllers\PrediksiController::class, 'predict']);
+Route::get('/predictions/history', [App\Http\Controllers\PrediksiController::class, 'history']);
+Route::get('/predictions/health', [App\Http\Controllers\PrediksiController::class, 'health']);
+
 
 // ========== TEST ROUTES ==========
 Route::get('/test', function() {
