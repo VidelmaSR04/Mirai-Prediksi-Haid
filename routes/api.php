@@ -3,13 +3,17 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Models\User;
-use App\Http\Controllers\UserAuthController;
 use App\Http\Controllers\SiklusController;
 use App\Http\Controllers\PrediksiController;
 use App\Http\Controllers\ForgotPasswordController;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use App\Models\Mobile\User;
+use App\Http\Controllers\Api\UserAuthController;
+use App\Http\Controllers\Api\CycleMobileController;
+use App\Http\Controllers\Api\PredictionMobileController;
+use App\Http\Controllers\Api\NoteController;
+use App\Http\Controllers\Api\CorrectionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -88,27 +92,55 @@ Route::get('/test-token', function() {
 });
 
 // ========== ROUTE UNTUK USER MOBILE ==========
-Route::prefix('user')->group(function () {
-    Route::post('/register', [UserAuthController::class, 'register']);
-    Route::post('/login', [UserAuthController::class, 'login']);
-    Route::post('/resend-otp', [UserAuthController::class, 'resendOtp']);
-    Route::post('/verify-otp', [UserAuthController::class, 'verifyOtp']);
+
+// Register & OTP Verification
+Route::post('/mobile/register', [UserAuthController::class, 'register']);
+Route::post('/mobile/verify-otp', [UserAuthController::class, 'verifyOtp']);
+Route::post('/mobile/resend-otp', [UserAuthController::class, 'resendOtp']);
+
+// Login
+Route::post('/mobile/login', [UserAuthController::class, 'login']);
+
+// ============================================
+// PROTECTED ROUTES (pakai token)
+// ============================================
+
+Route::middleware(['auth.api'])->group(function () {
     
-    Route::post('/logout', [UserAuthController::class, 'logout']);
-    Route::get('/profile', [UserAuthController::class, 'profile']);
-    Route::put('/profile', [UserAuthController::class, 'updateProfile']);
+    // User Profile
+    Route::post('/mobile/logout', [UserAuthController::class, 'logout']);
+    Route::get('/mobile/user/profile', [UserAuthController::class, 'profile']);
+    Route::put('/mobile/user/profile', [UserAuthController::class, 'updateProfile']);
+    
+    // Cycle (CRUD)
+    Route::get('/mobile/cycles', [CycleMobileController::class, 'index']);
+    Route::get('/mobile/cycle/latest', [CycleMobileController::class, 'latest']);
+    Route::post('/mobile/cycle', [CycleMobileController::class, 'store']);
+    Route::put('/mobile/cycle/{id}', [CycleMobileController::class, 'update']);
+    Route::delete('/mobile/cycle/{id}', [CycleMobileController::class, 'destroy']);
+    
+    // Prediction (AI)
+    Route::post('/mobile/predict', [PredictionMobileController::class, 'predict']);
+    Route::get('/mobile/predictions/history', [PredictionMobileController::class, 'history']);
+    Route::get('/mobile/predictions/{id}', [PredictionMobileController::class, 'show']);
 });
 
-// ========== ROUTE UNTUK CYCLE (SiklusController) ==========
-    Route::post('/cycle', [App\Http\Controllers\SiklusController::class, 'apiStore']);
-    Route::get('/cycles', [App\Http\Controllers\SiklusController::class, 'apiIndex']);
-    Route::get('/cycle/latest', [App\Http\Controllers\SiklusController::class, 'apiLatest']);
-    Route::put('/cycle/{id}', [App\Http\Controllers\SiklusController::class, 'apiUpdate']);
-    Route::delete('/cycle/{id}', [App\Http\Controllers\SiklusController::class, 'apiDestroy']);
+  Route::middleware(['auth.api'])->group(function () {
+    // ============================================
+    // DAILY NOTE
+    // ============================================
+    Route::post('/mobile/note', [NoteController::class, 'store']);
+    Route::get('/mobile/note/{date}', [NoteController::class, 'show']);
+    Route::get('/mobile/notes/{year}/{month}', [NoteController::class, 'getByMonth']);
+    Route::delete('/mobile/note/{id}', [NoteController::class, 'destroy']);
     
-    // ========== ROUTE UNTUK PREDIKSI (PrediksiController) ==========
-    Route::post('/predictions', [App\Http\Controllers\PrediksiController::class, 'predict']);
-    Route::get('/predictions', [App\Http\Controllers\PrediksiController::class, 'history']);
+    // ============================================
+    // CYCLE CORRECTION (Feedback untuk AI)
+    // ============================================
+    Route::post('/mobile/correction', [CorrectionController::class, 'store']);
+    Route::get('/mobile/corrections', [CorrectionController::class, 'index']);
+    Route::get('/mobile/corrections/stats', [CorrectionController::class, 'stats']);
+});
 
 // ========== TEST ROUTES ==========
 Route::get('/test', function() {
