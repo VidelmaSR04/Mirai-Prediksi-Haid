@@ -104,10 +104,22 @@
                     <input class="pl-10 pr-4 py-2 bg-slate-50 border-none rounded-full text-sm focus:ring-2 focus:ring-primary/20 w-64"
                            placeholder="@yield('search-placeholder', 'Cari...')" type="text"/>
                 </div>
-                <button class="p-2 text-slate-400 hover:text-primary relative">
-                    <span class="material-symbols-outlined">notifications</span>
-                    <span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-white"></span>
-                </button>
+                <div class="relative" id="notif-wrapper">
+        <button onclick="toggleNotif()" class="p-2 text-slate-400 hover:text-primary relative">
+           <span class="material-symbols-outlined">notifications</span>
+           <span id="notif-badge"
+              class="absolute top-2 right-2 w-4 h-4 bg-primary text-white text-[9px] font-bold rounded-full hidden items-center justify-center">
+            0
+            </span>
+        </button>
+        <div id="notif-dropdown"
+            class="hidden absolute right-0 mt-2 w-80 bg-white border border-rose-100 rounded-2xl shadow-xl z-50">
+            <div class="px-5 py-4 border-b border-rose-50 font-bold text-slate-700 text-sm">Notifikasi</div>
+            <ul id="notif-list" class="divide-y divide-rose-50 max-h-72 overflow-y-auto">
+            <li class="px-5 py-4 text-sm text-slate-400 text-center">Memuat...</li>
+              </ul>
+             </div>
+        </div>
                 <div class="h-10 w-[1px] bg-rose-100"></div>
                 @php $admin = auth('admin')->user(); @endphp
                 <div class="flex items-center gap-3">
@@ -155,6 +167,45 @@ function showToast(icon, msg, color = 'text-emerald-400') {
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 3500);
 }
+</script>
+<script>
+function toggleNotif() {
+    document.getElementById('notif-dropdown').classList.toggle('hidden');
+}
+document.addEventListener('click', function(e) {
+    const wrapper = document.getElementById('notif-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+        document.getElementById('notif-dropdown').classList.add('hidden');
+    }
+});
+function fetchNotif() {
+    fetch('{{ route("admin.notifikasi.data") }}')
+        .then(r => r.json())
+        .then(res => {
+            const badge = document.getElementById('notif-badge');
+            const list  = document.getElementById('notif-list');
+            if (res.total > 0) {
+                badge.textContent = res.total;
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+            } else {
+                badge.classList.add('hidden');
+                badge.classList.remove('flex');
+            }
+            list.innerHTML = res.data.length === 0
+                ? '<li class="px-5 py-4 text-sm text-slate-400 text-center">Tidak ada notifikasi baru</li>'
+                : res.data.map(n => `
+                    <li class="px-5 py-4 flex items-start gap-3 hover:bg-rose-50/30">
+                        <span class="material-symbols-outlined text-primary text-lg mt-0.5">${n.icon}</span>
+                        <div>
+                            <p class="text-sm text-slate-700 font-medium">${n.pesan}</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Baru saja</p>
+                        </div>
+                    </li>`).join('');
+        }).catch(() => {});
+}
+fetchNotif();
+setInterval(fetchNotif, 30000);
 </script>
 @stack('scripts')
 </body>

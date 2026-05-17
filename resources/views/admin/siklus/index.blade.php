@@ -99,20 +99,34 @@
             <tbody class="divide-y divide-rose-50 text-sm">
             @forelse($pageSiklus ?? [] as $s)
                 @php
-                    $panjang = (int)($s['panjang_siklus'] ?? 0);
-                    $isNormal = $panjang >= 21 && $panjang <= 35;
+        $panjang = (int)($s['panjang_siklus'] ?? 0);
+        $isNormal = $panjang >= 21 && $panjang <= 35;
 
-                    $faseRaw = strtolower(trim($s['current_phase'] ?? ''));
-                    $fase = ucfirst($faseRaw ?: 'Lainnya');
+        $faseRaw = strtolower(trim($s['current_phase'] ?? ''));
 
-                    $faseColor = match($faseRaw) {
-                        'folikel' => 'bg-amber-50 text-amber-600 border-amber-100',
-                        'ovulasi', 'ovulation' => 'bg-emerald-50 text-emerald-600 border-emerald-100',
-                        'luteal' => 'bg-violet-50 text-violet-600 border-violet-100',
-                        'menstruasi' => 'bg-red-50 text-red-600 border-red-100',
-                        default => 'bg-slate-50 text-slate-500 border-slate-100'
-                    };
-                @endphp
+        // mapping nama fase dari DB
+        $faseMap = [
+        'follicular' => 'Folikel',
+        'folikel' => 'Folikel',
+        'ovulation' => 'Ovulasi',
+        'ovulasi' => 'Ovulasi',
+        'luteal' => 'Luteal',
+        'menstruation' => 'Menstruasi',
+        'menstruasi' => 'Menstruasi',
+        'period' => 'Menstruasi',
+    ];
+
+        $fase = $faseMap[$faseRaw] ?? 'Lainnya';
+
+        $faseColor = match($fase) {
+        'Folikel' => 'bg-pink-50 text-pink-600 border-pink-200',
+        'Ovulasi' => 'bg-purple-50 text-purple-600 border-purple-200',
+        'Luteal' => 'bg-blue-50 text-blue-600 border-blue-200',
+        'Menstruasi' => 'bg-red-50 text-red-600 border-red-200',
+        default => 'bg-slate-50 text-slate-500 border-slate-100'
+        };
+    @endphp
+                
                 <tr class="hover:bg-rose-50/10 transition-colors">
                     <td class="px-7 py-4">
                         <div class="flex items-center gap-3">
@@ -201,7 +215,8 @@ if (Object.keys(distribusi).length > 0) {
             labels: Object.keys(distribusi),
             datasets: [{
                 data: Object.values(distribusi),
-                backgroundColor: ['#FFB7A5', '#E35D6A', '#7C3AED', '#F59E0B', '#64748B'],
+                backgroundColor: ['#f90909', '#A855F7', '#3B82F6', '#e1c5c5', '#64748B'],
+                
                 borderWidth: 3,
                 borderColor: '#fff'
             }]

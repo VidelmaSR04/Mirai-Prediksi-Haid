@@ -9,12 +9,26 @@
 <div class="bg-white rounded-2xl border border-rose-100 shadow-sm overflow-hidden">
 
     {{-- HEADER --}}
-    <div class="p-6 border-b border-rose-50 flex justify-between items-center">
-        <div>
-            <h3 class="font-bold text-slate-800">Daftar Pengguna</h3>
-            <p class="text-xs text-slate-400">Data pengguna sistem</p>
-        </div>
+   <div class="p-6 border-b border-rose-50 flex justify-between items-center">
+    <div>
+        <h3 class="font-bold text-slate-800">Daftar Pengguna</h3>
+        <p class="text-xs text-slate-400">Data pengguna sistem</p>
     </div>
+
+    {{-- FILTER --}}
+    <form method="GET" action="{{ route('admin.pengguna') }}" class="flex gap-3">
+        <select name="status" onchange="this.form.submit()"
+            class="px-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-200">
+            <option value="">Semua Status</option>
+            <option value="Aktif" {{ request('status') == 'Aktif' ? 'selected' : '' }}>
+                Aktif
+            </option>
+            <option value="Nonaktif" {{ request('status') == 'Nonaktif' ? 'selected' : '' }}>
+                Nonaktif
+            </option>
+        </select>
+    </form>
+</div>
 
     {{-- TABLE --}}
     <div class="overflow-x-auto">

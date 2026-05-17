@@ -49,14 +49,23 @@ class UserController extends Controller
             $allUsers = $this->getAllUsers();
 
             // Search
-            $search = trim($request->get('search', ''));
-            if ($search) {
-                $q = strtolower($search);
-                $allUsers = array_values(array_filter($allUsers, fn($u) =>
-                    str_contains(strtolower($u['nama_lengkap'] ?? ''), $q) ||
-                    str_contains(strtolower($u['email'] ?? ''), $q)
-                ));
-            }
+            // Search
+        $search = trim($request->get('search', ''));
+           if ($search) {
+        $q = strtolower($search);
+        $allUsers = array_values(array_filter($allUsers, fn($u) =>
+        str_contains(strtolower($u['nama_lengkap'] ?? ''), $q) ||
+        str_contains(strtolower($u['email'] ?? ''), $q)
+        ));
+    }
+
+        // Filter status
+        $status = trim($request->get('status', ''));
+           if ($status) {
+        $allUsers = array_values(array_filter($allUsers, fn($u) =>
+        strtolower($u['status'] ?? '') === strtolower($status)
+     ));
+   }
 
             // Pagination
             $perPage     = 10;

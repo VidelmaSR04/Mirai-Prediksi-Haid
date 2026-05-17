@@ -15,32 +15,7 @@ class SiklusController extends Controller
         return $client->selectDatabase(env('MONGODB_DATABASE', 'mirai'));
     }
 
-    public function index(Request $request)
-    {
-        try {
-            $db = $this->getDb();
-            $cyclesCol = $db->selectCollection('cycles');
-            $usersCol  = $db->selectCollection('users');
-
-            $allCycles = iterator_to_array($cyclesCol->find([]));
-
-            // Map nama user
-            $userMap = [];
-            foreach ($usersCol->find([]) as $u) {
-                $u = (array) $u;
-                $userMap[(int)$u['id_user']] = $u['nama_lengkap'] ?? 'User #' . $u['id_user'];
-            }
-
-            // Proses data
-            $processed = [];
-            foreach ($allCycles as $doc) {
-                $s = (array) $doc;
-
-                $s['nama'] = $userMap[(int)($s['id_user'] ?? 0)] ?? '-';
-
-                $s['tanggal_mulai_haid']   = $s['tanggal_mulai_haid']   ?? '-';
-    /** Semua cycles — 1 doc = 1 data (struktur baru) */
-    private function getAllCycles(): array
+private function getAllCycles(): array
     {
         $all = [];
         foreach ($this->getDb()->selectCollection('cycles')->find([]) as $doc) {
@@ -59,7 +34,7 @@ class SiklusController extends Controller
         }
         return $map;
     }
-
+    
     /**
      * Verify token manual
      */
@@ -85,6 +60,7 @@ class SiklusController extends Controller
         try {
             $allCycles = $this->getAllCycles();
             $userMap   = $this->getUserMap();
+            $processed = [];
 
             foreach ($allCycles as &$s) {
                 $s['nama'] = $userMap[$s['id_user'] ?? 0] ?? 'User #' . ($s['id_user'] ?? '-');
@@ -132,21 +108,6 @@ class SiklusController extends Controller
                 $fase = ucfirst(strtolower($s['current_phase'] ?? 'Lainnya'));
                 $key = in_array($fase, ['Folikel','Ovulasi','Luteal','Menstruasi']) ? $fase : 'Lainnya';
                 $distribusi[$key]++;
-            $total    = count($allCycles);
-            $cycleLen = array_filter(
-                array_column($allCycles, 'cycle_length_days'),
-                fn($v) => is_numeric($v)
-            );
-            $rataRata    = count($cycleLen) ? round(array_sum($cycleLen) / count($cycleLen), 1) : 0;
-            $normalCount = count(array_filter($cycleLen, fn($v) => $v >= 21 && $v <= 35));
-            $persenNormal = $total ? round($normalCount / $total * 100, 1) : 0;
-
-            $distribusi = ['Folikel' => 0, 'Ovulasi' => 0, 'Luteal' => 0, 'Menstruasi' => 0];
-            foreach ($allCycles as $s) {
-                $fase = ucfirst(strtolower($s['current_phase'] ?? ''));
-                if (isset($distribusi[$fase])) {
-                    $distribusi[$fase]++;
-                }
             }
 
             $perPage     = 10;
@@ -164,15 +125,12 @@ class SiklusController extends Controller
             return view('admin.siklus.index', ['error' => 'Gagal memuat data siklus.']);
         }
     }
-
+    
     // ================================================================
     // ========== API METHODS FOR MOBILE (TOKEN MANUAL) ==============
     // ================================================================
 
-    /**
-     * API: Get all cycles for authenticated user (Mobile)
-     * GET /api/cycles
-     */
+    
     public function apiIndex(Request $request)
     {
         try {
