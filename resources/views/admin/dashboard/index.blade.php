@@ -14,6 +14,16 @@
 
 @section('content')
 
+@php
+$stats = $stats ?? [
+    'rata_siklus'   => 0,
+    'persen_normal' => 0,
+    'total_siklus'  => 0,
+    'mae'           => 0,
+    'rmse'          => 0,
+    'r2'            => 0,
+];
+@endphp
 @if(isset($error))
 <div class="mb-6 flex items-center gap-3 bg-rose-50 border border-rose-200 text-rose-700 px-5 py-3 rounded-2xl text-sm">
     <span class="material-symbols-outlined">error</span> {{ $error }}

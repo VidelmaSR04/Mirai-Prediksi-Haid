@@ -72,7 +72,7 @@
                     <p class="text-sm font-bold text-slate-800">{{ $label }}</p>
                     <p class="text-[10px] text-slate-400">{{ $desc }}</p>
                 </div>
-                <span class="material-symbols-outlined text-lg check-icon" style="color:{{ $loop->first ? '#E35D6A' : '#E2E8F0' }}">check_circle</span>
+               <span class="material-symbols-outlined text-lg check-icon" style="color: {{ $loop->first ? '#E35D6A' : '#E2E8F0' }}">check_circle</span>
             </div>
             @endforeach
         </div>
