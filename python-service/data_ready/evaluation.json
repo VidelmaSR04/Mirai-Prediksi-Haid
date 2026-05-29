@@ -1,0 +1,24 @@
+{
+  "split_ratio": "70/15/15",
+  "best_model": "Linear Regression",
+  "validation_mae": 1.7064884952596677,
+  "test_mae": 1.7167747995504394,
+  "test_r2": 0.16539975607391655,
+  "features": [
+    "prev_cycle_length",
+    "pain_level",
+    "stress_score_cycle",
+    "sleep_hours_cycle",
+    "mood_score",
+    "age",
+    "bmi",
+    "pcos_diagnosed",
+    "birth_control_use"
+  ],
+  "n_samples": {
+    "total": 17976,
+    "train": 12583,
+    "validation": 2696,
+    "test": 2697
+  }
+}
