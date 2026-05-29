@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\User;
-use App\Models\PasswordReset;
+use App\Models\Mobile\User;
+use App\Models\Mobile\PasswordReset;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
@@ -172,5 +172,4 @@ class ForgotPasswordController extends Controller
             ], 500);
         }
     }
-}
 }
