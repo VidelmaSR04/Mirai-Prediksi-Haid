@@ -15,7 +15,7 @@ class SiklusController extends Controller
         return $client->selectDatabase(env('MONGODB_DATABASE', 'mirai'));
     }
 
-private function getAllCycles(): array
+    private function getAllCycles(): array
     {
         $all = [];
         foreach ($this->getDb()->selectCollection('cycles')->find([]) as $doc) {
@@ -34,7 +34,30 @@ private function getAllCycles(): array
         }
         return $map;
     }
-    
+
+    /**
+     * Normalisasi nama fase dari Inggris/Indonesia → label Indonesia standar
+     */
+    private function normalizeFase(string $raw): string
+    {
+        $map = [
+            // Bahasa Inggris (dari MongoDB)
+            'follicular'   => 'Folikel',
+            'follicle'     => 'Folikel',
+            'ovulation'    => 'Ovulasi',
+            'ovulatory'    => 'Ovulasi',
+            'luteal'       => 'Luteal',
+            'menstruation' => 'Menstruasi',
+            'menstrual'    => 'Menstruasi',
+            'period'       => 'Menstruasi',
+            // Bahasa Indonesia (fallback)
+            'folikel'      => 'Folikel',
+            'ovulasi'      => 'Ovulasi',
+            'menstruasi'   => 'Menstruasi',
+        ];
+        return $map[strtolower(trim($raw))] ?? 'Lainnya';
+    }
+
     /**
      * Verify token manual
      */
@@ -42,11 +65,11 @@ private function getAllCycles(): array
     {
         try {
             $decoded = json_decode(base64_decode($token), true);
-            
+
             if (!$decoded || !isset($decoded['exp']) || $decoded['exp'] < time()) {
                 return null;
             }
-            
+
             return $decoded['id_user'] ?? null;
         } catch (\Exception $e) {
             Log::error('Verify token error: ' . $e->getMessage());
@@ -62,19 +85,28 @@ private function getAllCycles(): array
             $userMap   = $this->getUserMap();
             $processed = [];
 
-            foreach ($allCycles as &$s) {
-                $s['nama'] = $userMap[$s['id_user'] ?? 0] ?? 'User #' . ($s['id_user'] ?? '-');
-                $s['panjang_siklus']       = $s['cycle_length_days']   ?? 0;
+            foreach ($allCycles as $s) {
+                $s['nama']                 = $userMap[$s['id_user'] ?? 0] ?? 'User #' . ($s['id_user'] ?? '-');
                 $s['tanggal_mulai_haid']   = $s['tanggal_mulai_haid']  ?? '-';
                 $s['tanggal_selesai_haid'] = $s['tanggal_selesai_haid'] ?? '-';
                 $s['panjang_siklus']       = (int)($s['cycle_length_days'] ?? 0);
                 $s['pain_level']           = (int)($s['pain_level'] ?? 0);
                 $s['stress_score_cycle']   = $s['stress_score_cycle']   ?? '-';
                 $s['sleep_hours_cycle']    = $s['sleep_hours_cycle']    ?? '-';
-                $s['current_phase']        = ucfirst(strtolower($s['current_phase'] ?? 'Lainnya'));
-
+                // ✅ Normalisasi fase: Inggris/Indonesia → label Indonesia standar
+                $s['current_phase']        = $this->normalizeFase($s['current_phase'] ?? '');
                 $processed[] = $s;
             }
+
+            // ✅ Distribusi dihitung dari SEMUA data (setelah normalisasi, sebelum filter)
+            // Sehingga donut chart selalu mencerminkan keseluruhan data
+            $distribusi = ['Folikel' => 0, 'Ovulasi' => 0, 'Luteal' => 0, 'Menstruasi' => 0, 'Lainnya' => 0];
+            foreach ($processed as $s) {
+                $key = array_key_exists($s['current_phase'], $distribusi) ? $s['current_phase'] : 'Lainnya';
+                $distribusi[$key]++;
+            }
+            // Hapus fase yang 0 agar chart lebih bersih (opsional, bisa dihapus baris ini)
+            $distribusi = array_filter($distribusi, fn($v) => $v > 0);
 
             // Filter Fase
             $filterPhase = $request->get('fase');
@@ -84,6 +116,7 @@ private function getAllCycles(): array
                 ));
             }
 
+            // Filter Search
             $search = trim($request->get('search', ''));
             if ($search) {
                 $q = strtolower($search);
@@ -94,21 +127,11 @@ private function getAllCycles(): array
 
             $total = count($processed);
 
-            // Stats
-            $lengths = array_filter(array_column($processed, 'panjang_siklus'));
-            $rataRata = count($lengths) ? round(array_sum($lengths) / count($lengths), 1) : 0;
-
-            $normalCount = count(array_filter($lengths, fn($v) => $v >= 21 && $v <= 35));
+            // Stats berdasarkan data yang sudah difilter
+            $lengths      = array_filter(array_column($processed, 'panjang_siklus'));
+            $rataRata     = count($lengths) ? round(array_sum($lengths) / count($lengths), 1) : 0;
+            $normalCount  = count(array_filter($lengths, fn($v) => $v >= 21 && $v <= 35));
             $persenNormal = $total > 0 ? round(($normalCount / $total) * 100, 1) : 0;
-
-            // Distribusi Fase (untuk card)
-            $distribusi = ['Folikel' => 0, 'Ovulasi' => 0, 'Luteal' => 0, 'Menstruasi' => 0, 'Lainnya' => 0];
-            foreach ($allCycles as $doc) {
-                $s = (array) $doc;
-                $fase = ucfirst(strtolower($s['current_phase'] ?? 'Lainnya'));
-                $key = in_array($fase, ['Folikel','Ovulasi','Luteal','Menstruasi']) ? $fase : 'Lainnya';
-                $distribusi[$key]++;
-            }
 
             $perPage     = 10;
             $currentPage = max(1, (int)$request->get('page', 1));
@@ -125,37 +148,36 @@ private function getAllCycles(): array
             return view('admin.siklus.index', ['error' => 'Gagal memuat data siklus.']);
         }
     }
-    
+
     // ================================================================
     // ========== API METHODS FOR MOBILE (TOKEN MANUAL) ==============
     // ================================================================
 
-    
     public function apiIndex(Request $request)
     {
         try {
             $token = $request->bearerToken();
-            
+
             if (!$token) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Token tidak ditemukan'
                 ], 401);
             }
-            
+
             $userId = $this->verifyToken($token);
-            
+
             if (!$userId) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Token tidak valid'
                 ], 401);
             }
-            
+
             $cycles = Cycle::where('id_user', $userId)
                 ->orderBy('created_at', 'desc')
                 ->get();
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $cycles
@@ -177,34 +199,34 @@ private function getAllCycles(): array
     {
         try {
             $token = $request->bearerToken();
-            
+
             if (!$token) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Token tidak ditemukan'
                 ], 401);
             }
-            
+
             $userId = $this->verifyToken($token);
-            
+
             if (!$userId) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Token tidak valid'
                 ], 401);
             }
-            
+
             $cycle = Cycle::where('id_user', $userId)
                 ->orderBy('created_at', 'desc')
                 ->first();
-            
+
             if (!$cycle) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Belum ada data siklus'
                 ], 404);
             }
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $cycle
@@ -225,27 +247,26 @@ private function getAllCycles(): array
     public function apiStore(Request $request)
     {
         try {
-            // Log request
             Log::info('API Store cycle - Request received', [
                 'headers' => $request->headers->all(),
-                'body' => $request->all()
+                'body'    => $request->all()
             ]);
 
             $token = $request->bearerToken();
-            
+
             Log::info('API Store cycle - Token: ' . ($token ? substr($token, 0, 50) . '...' : 'null'));
-            
+
             if (!$token) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Token tidak ditemukan. Silakan login ulang.'
                 ], 401);
             }
-            
+
             $userId = $this->verifyToken($token);
-            
+
             Log::info('API Store cycle - User ID from token: ' . ($userId ?? 'null'));
-            
+
             if (!$userId) {
                 return response()->json([
                     'success' => false,
@@ -254,18 +275,17 @@ private function getAllCycles(): array
             }
 
             $validated = $request->validate([
-                'id_user' => 'required|integer',
-                'last_period_date' => 'required|date',
-                'previous_period_date' => 'nullable|date',
-                'cycle_length_days' => 'nullable|integer|min:15|max:60',
-                'period_duration_days' => 'nullable|integer|min:1|max:15',
-                'stress_score_cycle' => 'nullable|integer|min:1|max:10',
-                'sleep_hours_cycle' => 'nullable|numeric|min:1|max:24',
-                'symptoms' => 'nullable|array',
-                'notes' => 'nullable|string',
+                'id_user'               => 'required|integer',
+                'last_period_date'      => 'required|date',
+                'previous_period_date'  => 'nullable|date',
+                'cycle_length_days'     => 'nullable|integer|min:15|max:60',
+                'period_duration_days'  => 'nullable|integer|min:1|max:15',
+                'stress_score_cycle'    => 'nullable|integer|min:1|max:10',
+                'sleep_hours_cycle'     => 'nullable|numeric|min:1|max:24',
+                'symptoms'              => 'nullable|array',
+                'notes'                 => 'nullable|string',
             ]);
 
-            // Verify user matches token
             if ($validated['id_user'] != $userId) {
                 return response()->json([
                     'success' => false,
@@ -280,8 +300,8 @@ private function getAllCycles(): array
             return response()->json([
                 'success' => true,
                 'message' => 'Data siklus berhasil disimpan',
-                'data' => $cycle,
-                '_id' => $cycle->_id
+                'data'    => $cycle,
+                '_id'     => $cycle->_id
             ], 201);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -289,7 +309,7 @@ private function getAllCycles(): array
             return response()->json([
                 'success' => false,
                 'message' => 'Validasi gagal',
-                'errors' => $e->errors()
+                'errors'  => $e->errors()
             ], 422);
         } catch (\Exception $e) {
             Log::error('API Store cycle error: ' . $e->getMessage());
@@ -308,32 +328,32 @@ private function getAllCycles(): array
     {
         try {
             $token = $request->bearerToken();
-            
+
             if (!$token) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Token tidak ditemukan'
                 ], 401);
             }
-            
+
             $userId = $this->verifyToken($token);
-            
+
             if (!$userId) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Token tidak valid'
                 ], 401);
             }
-            
+
             $cycle = Cycle::find($id);
-            
+
             if (!$cycle) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Data siklus tidak ditemukan'
                 ], 404);
             }
-            
+
             if ($cycle->id_user != $userId) {
                 return response()->json([
                     'success' => false,
@@ -342,14 +362,14 @@ private function getAllCycles(): array
             }
 
             $validated = $request->validate([
-                'last_period_date' => 'nullable|date',
+                'last_period_date'     => 'nullable|date',
                 'previous_period_date' => 'nullable|date',
-                'cycle_length_days' => 'nullable|integer|min:15|max:60',
+                'cycle_length_days'    => 'nullable|integer|min:15|max:60',
                 'period_duration_days' => 'nullable|integer|min:1|max:15',
-                'stress_score_cycle' => 'nullable|integer|min:1|max:10',
-                'sleep_hours_cycle' => 'nullable|numeric|min:1|max:24',
-                'symptoms' => 'nullable|array',
-                'notes' => 'nullable|string',
+                'stress_score_cycle'   => 'nullable|integer|min:1|max:10',
+                'sleep_hours_cycle'    => 'nullable|numeric|min:1|max:24',
+                'symptoms'             => 'nullable|array',
+                'notes'                => 'nullable|string',
             ]);
 
             $cycle->update($validated);
@@ -357,7 +377,7 @@ private function getAllCycles(): array
             return response()->json([
                 'success' => true,
                 'message' => 'Data siklus berhasil diupdate',
-                'data' => $cycle
+                'data'    => $cycle
             ]);
 
         } catch (\Exception $e) {
@@ -377,32 +397,32 @@ private function getAllCycles(): array
     {
         try {
             $token = $request->bearerToken();
-            
+
             if (!$token) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Token tidak ditemukan'
                 ], 401);
             }
-            
+
             $userId = $this->verifyToken($token);
-            
+
             if (!$userId) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Token tidak valid'
                 ], 401);
             }
-            
+
             $cycle = Cycle::find($id);
-            
+
             if (!$cycle) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Data siklus tidak ditemukan'
                 ], 404);
             }
-            
+
             if ($cycle->id_user != $userId) {
                 return response()->json([
                     'success' => false,
