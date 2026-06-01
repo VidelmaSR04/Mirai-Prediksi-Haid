@@ -23,7 +23,7 @@ class LaporanController extends Controller
 
             $riwayat = $riwayatCol->find([], [
                 'sort'  => ['created_at' => -1],
-                'limit' => 30
+                'limit' => 30,
             ])->toArray();
 
             $laporan = array_map(function ($r) {
@@ -44,8 +44,6 @@ class LaporanController extends Controller
                 'ekspor_hari_ini' => $riwayatCol->countDocuments([
                     'created_at' => ['$gte' => new UTCDateTime(now()->startOfDay()->getTimestamp() * 1000)],
                 ]),
-                'terjadwal'       => 0,
-                'total_ukuran_mb' => round(array_sum(array_column($riwayat, 'ukuran_kb')) / 1024, 1) ?: 0,
             ];
 
             return view('admin.laporan.index', compact('laporan', 'stats'));
@@ -54,7 +52,7 @@ class LaporanController extends Controller
             Log::error('LaporanController@index: ' . $e->getMessage());
             return view('admin.laporan.index', [
                 'laporan' => [],
-                'stats'   => ['total' => 0, 'ekspor_hari_ini' => 0, 'terjadwal' => 0, 'total_ukuran_mb' => 0]
+                'stats'   => ['total' => 0, 'ekspor_hari_ini' => 0],
             ]);
         }
     }
@@ -78,7 +76,7 @@ class LaporanController extends Controller
             [$rows, $headers, $namaFile] = $this->buildReportData($db, $template, $dari, $sampai);
 
             $timestamp = now()->format('Ymd_His');
-            $baseName  = str_replace([' ', '&', '-'], '_', strtolower($namaFile)) . '_' . $timestamp;
+            $baseName  = str_replace([' ', '&', '-', '/', '+'], '_', strtolower($namaFile)) . '_' . $timestamp;
             $filename  = $baseName . '.csv';
 
             $ukuranKb = $this->estimateSize($rows, $headers);
@@ -108,15 +106,17 @@ class LaporanController extends Controller
     {
         return response()->stream(function () use ($headers, $rows) {
             $out = fopen('php://output', 'w');
-            fputs($out, "\xEF\xBB\xBF");
-            fputcsv($out, $headers);
+            fputs($out, "\xEF\xBB\xBF"); // BOM UTF-8 agar Excel tidak acak karakter
+            fputcsv($out, $headers, ',');
             foreach ($rows as $row) {
-                fputcsv($out, array_map('strval', $row));
+                fputcsv($out, array_map('strval', $row), ',');
             }
             fclose($out);
         }, 200, [
             'Content-Type'        => 'text/csv;charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Cache-Control'       => 'no-cache, no-store, must-revalidate',
+            'Pragma'              => 'no-cache',
         ]);
     }
 
@@ -129,52 +129,153 @@ class LaporanController extends Controller
         return round(strlen($content) / 1024, 2);
     }
 
-    /**
-     * Build Data Laporan - Hanya 2 Template
-     */
     private function buildReportData($db, string $template, string $dari, string $sampai): array
     {
-        $templateLower = strtolower($template);
+        $t = strtolower($template);
 
-        // Template 1: Demografis Pengguna
-        if (str_contains($templateLower, 'demografis') || str_contains($templateLower, 'pengguna')) {
+        // ══════════════════════════════════════════════════════
+        // TEMPLATE 1: Profil & Demografi Pengguna
+        // Collection: users
+        // Field persis sesuai MongoDB
+        // ══════════════════════════════════════════════════════
+        if (str_contains($t, 'demografi') || str_contains($t, 'profil')) {
             $rows = [];
             foreach ($db->selectCollection('users')->find([]) as $doc) {
                 $doc = (array) $doc;
                 $rows[] = [
-                    $doc['id_user'] ?? '',
-                    $doc['nama_lengkap'] ?? '',
-                    $doc['email'] ?? '',
-                    $doc['age'] ?? '',
-                    $doc['bmi'] ?? '',
-                    $doc['state'] ?? '',
-                    $doc['status'] ?? 'Aktif',
+                    $doc['id_user']               ?? '',
+                    $doc['nama_lengkap']          ?? '',
+                    $doc['email']                 ?? '',
+                    $doc['no_telepon']            ?? '',
+                    $doc['age']                   ?? '',
+                    $doc['bmi']                   ?? '',
+                    $doc['sleep_hours']           ?? '',
+                    $doc['exercise_frequency']    ?? '',
+                    $doc['stress_score_baseline'] ?? '',
+                    $doc['diet_quality']          ?? '',
+                    $doc['water_intake_liters']   ?? '',
+                    $doc['caffeine_intake']       ?? '',
+                    isset($doc['pcos_diagnosed'])      ? ($doc['pcos_diagnosed'] == 1      ? 'Ya' : 'Tidak') : '',
+                    isset($doc['birth_control_use'])   ? ($doc['birth_control_use'] == 1   ? 'Ya' : 'Tidak') : '',
+                    $doc['smoking_status']        ?? '',
+                    $doc['alcohol_consumption']   ?? '',
+                    ucfirst(strtolower($doc['status'] ?? 'aktif')),
+                    $doc['state']                 ?? '',
+                    $doc['created_at']            ?? '',
                 ];
             }
-            return [$rows, ['ID User', 'Nama Lengkap', 'Email', 'Usia', 'BMI', 'State', 'Status'], 'Demografis_Pengguna'];
+            $headers = [
+                'ID User', 'Nama Lengkap', 'Email', 'No. Telepon',
+                'Usia', 'BMI',
+                'Jam Tidur', 'Frekuensi Olahraga', 'Skor Stres Baseline',
+                'Kualitas Diet', 'Asupan Air (liter)', 'Kafein (cangkir/hari)',
+                'PCOS', 'Kontrasepsi',
+                'Merokok', 'Konsumsi Alkohol',
+                'Status', 'Domisili', 'Tanggal Daftar',
+            ];
+            return [$rows, $headers, 'Profil_Demografi_Pengguna'];
         }
 
-        // Template 2: Log Siklus Menstruasi (Default)
-        $rows = [];
-        foreach ($db->selectCollection('cycles')->find([]) as $doc) {
-            $doc = (array) $doc;
-            $tgl = $doc['tanggal_mulai_haid'] ?? '';
-            if ($tgl >= $dari && $tgl <= $sampai) {
+        // ══════════════════════════════════════════════════════
+        // TEMPLATE 2: Riwayat Siklus Menstruasi
+        // Collection: cycles
+        // Field persis sesuai MongoDB
+        // Filter tanggal_mulai_haid format "Y-m-d"
+        // ══════════════════════════════════════════════════════
+        if (str_contains($t, 'siklus') || str_contains($t, 'menstruasi') || str_contains($t, 'riwayat')) {
+            $rows = [];
+
+            foreach ($db->selectCollection('cycles')->find([]) as $doc) {
+                $doc = (array) $doc;
+                $tgl = $doc['tanggal_mulai_haid'] ?? '';
+
+                // Filter rentang tanggal — format DB sudah "Y-m-d" jadi bisa compare string
+                if ($tgl === '' || $tgl < $dari || $tgl > $sampai) {
+                    continue;
+                }
+
                 $rows[] = [
-                    $doc['id_user'] ?? '',
+                    $doc['id_user']              ?? '',
+                    $doc['id_siklus']            ?? '',
                     $tgl,
                     $doc['tanggal_selesai_haid'] ?? '',
-                    $doc['cycle_length_days'] ?? '',
-                    $doc['pain_level'] ?? '',
-                    $doc['stress_score_cycle'] ?? '',
-                    $doc['sleep_hours_cycle'] ?? '',
-                    $doc['mood_score'] ?? '',
-                    $doc['estrogen_pgml'] ?? '',
-                    $doc['progesterone_ngml'] ?? '',
+                    $doc['menstruation_length']  ?? '',
+                    $doc['cycle_length_days']    ?? '',
+                    $doc['prev_cycle_length']    ?? '',
+                    $doc['cycle_status']         ?? '',
+                    $doc['pattern']              ?? '',
+                    $doc['current_phase']        ?? '',
+                    $doc['flow_level']           ?? '',
+                    $doc['pain_level']           ?? '',
+                    $doc['pms_symptoms']         ?? '',
+                    $doc['mood_score']           ?? '',
+                    $doc['stress_score_cycle']   ?? '',
+                    $doc['sleep_hours_cycle']    ?? '',
+                    $doc['energy_level']         ?? '',
+                    $doc['concentration_score']  ?? '',
+                    $doc['work_hours_lost']      ?? '',
+                    $doc['estrogen_pgml']        ?? '',
+                    $doc['progesterone_ngml']    ?? '',
+                    $doc['predicted_ovulation']  ?? '',
                 ];
             }
+
+            $headers = [
+                'ID User', 'ID Siklus',
+                'Tgl Mulai Haid', 'Tgl Selesai Haid',
+                'Lama Menstruasi (hari)', 'Panjang Siklus (hari)', 'Panjang Siklus Sebelumnya',
+                'Status Siklus', 'Pola', 'Fase Saat Ini',
+                'Flow Level', 'Pain Level', 'PMS Symptoms',
+                'Mood Score', 'Stress Score', 'Sleep Hours',
+                'Energy Level', 'Concentration Score', 'Work Hours Lost',
+                'Estrogen (pg/mL)', 'Progesterone (ng/mL)', 'Prediksi Ovulasi',
+            ];
+            return [$rows, $headers, 'Riwayat_Siklus_Menstruasi'];
         }
-        return [$rows, ['ID User', 'Tgl Mulai Haid', 'Tgl Selesai Haid', 'Panjang Siklus', 'Pain Level', 'Stress Score', 'Sleep Hours', 'Mood Score', 'Estrogen', 'Progesterone'], 'Log_Siklus_Menstruasi'];
+
+        // ══════════════════════════════════════════════════════
+        // TEMPLATE 3: Ringkasan Prediksi AI
+        // Collection: predictions
+        // Header dibangun DINAMIS dari dokumen pertama
+        // agar tidak kosong meskipun nama field tidak diketahui
+        // ══════════════════════════════════════════════════════
+        $rows        = [];
+        $headers     = [];
+        $headerBuilt = false;
+
+        foreach ($db->selectCollection('predictions')->find([]) as $doc) {
+            $doc = (array) $doc;
+
+            // Buang _id (ObjectId tidak bisa di-strval)
+            unset($doc['_id']);
+
+            // Bangun header dari dokumen pertama yang tidak kosong
+            if (!$headerBuilt && !empty($doc)) {
+                $headers     = array_keys($doc);
+                $headerBuilt = true;
+            }
+
+            if (!$headerBuilt) continue;
+
+            $row = [];
+            foreach ($headers as $key) {
+                $val = $doc[$key] ?? '';
+                if (is_array($val) || is_object($val)) {
+                    $val = json_encode($val, JSON_UNESCAPED_UNICODE);
+                }
+                $row[] = (string) $val;
+            }
+            $rows[] = $row;
+        }
+
+        if (empty($headers)) {
+            $headers = ['Tidak ada data prediksi'];
+        }
+
+        // Ubah snake_case ke label yang lebih ramah baca
+        $headersLabel = array_map(fn($h) => ucwords(str_replace('_', ' ', $h)), $headers);
+
+        return [$rows, $headersLabel, 'Ringkasan_Prediksi_AI'];
     }
 
     public function destroy(string $id)
@@ -188,6 +289,7 @@ class LaporanController extends Controller
                 ->deleteOne(['_id' => new \MongoDB\BSON\ObjectId($id)]);
 
             return back()->with('success', 'Laporan berhasil dihapus.');
+
         } catch (\Exception $e) {
             Log::error('LaporanController@destroy: ' . $e->getMessage());
             return back()->with('error', 'Gagal menghapus laporan.');

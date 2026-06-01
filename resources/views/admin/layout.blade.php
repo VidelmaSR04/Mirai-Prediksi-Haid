@@ -54,12 +54,12 @@
         <nav class="flex-1 px-6 space-y-2 overflow-y-auto">
             @php
                 $menu = [
-                            ['route' => 'admin.dashboard', 'icon' => 'dashboard',        'label' => 'Dashboard'],
-                            ['route' => 'admin.pengguna',  'icon' => 'person',           'label' => 'Data Pengguna'],
-                            ['route' => 'admin.siklus',    'icon' => 'calendar_month',   'label' => 'Data Siklus Menstruasi'],
-                            ['route' => 'admin.prediksi',  'icon' => 'health_and_safety','label' => 'Prediksi & Kesuburan'],
-                            ['route' => 'admin.analitik',  'icon' => 'analytics',        'label' => 'Analitik & Grafik'],
-                            ['route' => 'admin.laporan',   'icon' => 'description',      'label' => 'Laporan'],
+                           ['route' => 'admin.dashboard', 'icon' => 'dashboard', 'label' => 'Dashboard'],
+    ['route' => 'admin.pengguna.index', 'icon' => 'person', 'label' => 'Data Pengguna'],  // ← Diubah
+    ['route' => 'admin.siklus', 'icon' => 'calendar_month', 'label' => 'Data Siklus'],
+    ['route' => 'admin.prediksi', 'icon' => 'health_and_safety', 'label' => 'Prediksi'],
+    ['route' => 'admin.analitik', 'icon' => 'analytics', 'label' => 'Analitik'],
+    ['route' => 'admin.laporan', 'icon' => 'description', 'label' => 'Laporan'],
                         ];
             @endphp
 

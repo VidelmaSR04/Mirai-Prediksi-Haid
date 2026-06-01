@@ -51,12 +51,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/register', [AdminAuthController::class, 'register'])->name('register.submit');
 
         // Data Pengguna
-        Route::prefix('pengguna')->name('pengguna')->group(function () {
-            Route::get('/',              [UserController::class, 'index'])->name('');
-            Route::get('/export',        [UserController::class, 'exportCsv'])->name('.export');
-            Route::get('/{id}',          [UserController::class, 'show'])->name('.show');
-            Route::patch('/{id}/status', [UserController::class, 'updateStatus'])->name('.status');
-        });
+Route::prefix('pengguna')->name('pengguna.')->group(function () {
+    Route::get('/',              [UserController::class, 'index'])->name('index');
+    Route::get('/export',        [UserController::class, 'exportCsv'])->name('export');
+    Route::get('/{id}',          [UserController::class, 'show'])->name('show');
+    Route::patch('/{id}/status', [UserController::class, 'updateStatus'])->name('status');
+});
 
         // Laporan & Pengaturan (tetap)
         Route::prefix('laporan')->name('laporan')->group(function () {
