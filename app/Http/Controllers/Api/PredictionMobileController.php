@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-
 use App\Http\Controllers\Controller;
 use App\Models\Mobile\Prediction;
 use App\Models\Mobile\User;
@@ -44,27 +43,26 @@ class PredictionMobileController extends Controller
      * POST /api/mobile/predict
      * Prediksi siklus dengan AI - User TIDAK input panjang siklus manual!
      */
-public function predict(Request $request)
-{
-    try {
-        $user = $request->user;
-        
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized'
-            ], 401);
-        }
+    public function predict(Request $request)
+    {
+        try {
+            $user = $request->user;
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 401);
+            }
 
-        $userId = $user->id_user;
+            $userId = $user->id_user;
             
             // ============================================
             // 1. VALIDASI INPUT DARI MOBILE
             // ============================================
-            // User hanya input tanggal, TIDAK input panjang siklus!
             $validated = $request->validate([
-                'tanggal_haid_terakhir' => 'required|date',           // WAJIB
-                'tanggal_haid_bulan_sebelumnya' => 'nullable|date',   // OPSIONAL
+                'tanggal_haid_terakhir' => 'required|date',
+                'tanggal_haid_bulan_sebelumnya' => 'nullable|date',
                 'pain_level' => 'required|integer|min:0|max:10',
                 'stress_score_cycle' => 'required|integer|min:0|max:10',
                 'sleep_hours_cycle' => 'required|numeric|min:0|max:24',
@@ -72,18 +70,17 @@ public function predict(Request $request)
             ]);
 
             // ============================================
-            // 2. HITUNG prev_cycle_length OTOMATIS (User TIDAK input!)
+            // 2. HITUNG prev_cycle_length OTOMATIS
             // ============================================
             $lastDate = Carbon::parse($validated['tanggal_haid_terakhir']);
-            $prevCycleLength = 28; // default jika tidak ada data sebelumnya
+            $prevCycleLength = 28;
 
             if (!empty($validated['tanggal_haid_bulan_sebelumnya'])) {
                 $prevDate = Carbon::parse($validated['tanggal_haid_bulan_sebelumnya']);
                 $prevCycleLength = $lastDate->diffInDays($prevDate);
                 
-                // Validasi logis: siklus normal 20-45 hari
                 if ($prevCycleLength < 20 || $prevCycleLength > 45) {
-                    $prevCycleLength = 28; // fallback ke default
+                    $prevCycleLength = 28;
                     Log::warning('Invalid cycle length detected, using default', [
                         'calculated' => $prevCycleLength,
                         'user_id' => $userId
@@ -99,27 +96,29 @@ public function predict(Request $request)
             ]);
 
             // ============================================
-            // 3. AMBIL DATA USER (usia, BMI)
+            // 3. AMBIL DATA USER (usia, BMI, PCOS, KB)
             // ============================================
-            $user = User::where('id_user', $userId)->first();
+            // Gunakan $user yang sudah ada (dari middleware)
             $age = $user->age ?? 25;
             $bmi = $user->bmi ?? 22;
+            $pcosDiagnosed = $user->pcos_diagnosed ? 1 : 0;
+            $birthControlUse = $user->birth_control_use ? 1 : 0;
 
             // ============================================
-            // 4. Siapkan payload untuk Python Service (PORT 8001)
+            // 4. Siapkan payload untuk Python Service
             // ============================================
             $payload = [
                 'start_date' => $validated['tanggal_haid_terakhir'],
                 'user_data' => [
-                    'prev_cycle_length' => (float) $prevCycleLength,  // ← HASIL HITUNGAN!
+                    'prev_cycle_length' => (float) $prevCycleLength,
                     'pain_level' => (float) $validated['pain_level'],
                     'stress_score_cycle' => (float) $validated['stress_score_cycle'],
                     'sleep_hours_cycle' => (float) $validated['sleep_hours_cycle'],
                     'mood_score' => (float) ($validated['mood_score'] ?? 7),
                     'age' => (float) $age,
                     'bmi' => (float) $bmi,
-                    'pcos_diagnosed' => 0,
-                    'birth_control_use' => 0,
+                    'pcos_diagnosed' => $pcosDiagnosed,
+                    'birth_control_use' => $birthControlUse,
                 ]
             ];
 
@@ -129,7 +128,7 @@ public function predict(Request $request)
             ]);
 
             // ============================================
-            // 5. PANGGIL PYTHON SERVICE (PORT 8001)
+            // 5. PANGGIL PYTHON SERVICE
             // ============================================
             $response = Http::timeout(10)->post(
                 $this->pythonServiceUrl . '/api/predict',
