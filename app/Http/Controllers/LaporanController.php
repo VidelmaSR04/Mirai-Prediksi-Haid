@@ -136,42 +136,28 @@ class LaporanController extends Controller
         // ══════════════════════════════════════════════════════
         // TEMPLATE 1: Profil & Demografi Pengguna
         // Collection: users
-        // Field persis sesuai MongoDB
+        // Field sesuai struktur MongoDB terbaru
         // ══════════════════════════════════════════════════════
         if (str_contains($t, 'demografi') || str_contains($t, 'profil')) {
             $rows = [];
             foreach ($db->selectCollection('users')->find([]) as $doc) {
                 $doc = (array) $doc;
                 $rows[] = [
-                    $doc['id_user']               ?? '',
-                    $doc['nama_lengkap']          ?? '',
-                    $doc['email']                 ?? '',
-                    $doc['no_telepon']            ?? '',
-                    $doc['age']                   ?? '',
-                    $doc['bmi']                   ?? '',
-                    $doc['sleep_hours']           ?? '',
-                    $doc['exercise_frequency']    ?? '',
-                    $doc['stress_score_baseline'] ?? '',
-                    $doc['diet_quality']          ?? '',
-                    $doc['water_intake_liters']   ?? '',
-                    $doc['caffeine_intake']       ?? '',
-                    isset($doc['pcos_diagnosed'])      ? ($doc['pcos_diagnosed'] == 1      ? 'Ya' : 'Tidak') : '',
-                    isset($doc['birth_control_use'])   ? ($doc['birth_control_use'] == 1   ? 'Ya' : 'Tidak') : '',
-                    $doc['smoking_status']        ?? '',
-                    $doc['alcohol_consumption']   ?? '',
+                    $doc['user_id']            ?? '',
+                    $doc['nama_lengkap']       ?? '',
+                    $doc['email']              ?? '',
+                    $doc['age']                ?? '',
+                    $doc['bmi']                ?? '',
+                    isset($doc['pcos_diagnosed'])    ? ($doc['pcos_diagnosed'] == 1    ? 'Ya' : 'Tidak') : '',
+                    isset($doc['birth_control_use']) ? ($doc['birth_control_use'] == 1 ? 'Ya' : 'Tidak') : '',
                     ucfirst(strtolower($doc['status'] ?? 'aktif')),
-                    $doc['state']                 ?? '',
-                    $doc['created_at']            ?? '',
                 ];
             }
             $headers = [
-                'ID User', 'Nama Lengkap', 'Email', 'No. Telepon',
+                'ID User', 'Nama Lengkap', 'Email',
                 'Usia', 'BMI',
-                'Jam Tidur', 'Frekuensi Olahraga', 'Skor Stres Baseline',
-                'Kualitas Diet', 'Asupan Air (liter)', 'Kafein (cangkir/hari)',
                 'PCOS', 'Kontrasepsi',
-                'Merokok', 'Konsumsi Alkohol',
-                'Status', 'Domisili', 'Tanggal Daftar',
+                'Status',
             ];
             return [$rows, $headers, 'Profil_Demografi_Pengguna'];
         }
@@ -179,56 +165,31 @@ class LaporanController extends Controller
         // ══════════════════════════════════════════════════════
         // TEMPLATE 2: Riwayat Siklus Menstruasi
         // Collection: cycles
-        // Field persis sesuai MongoDB
-        // Filter tanggal_mulai_haid format "Y-m-d"
+        // Field sesuai struktur MongoDB terbaru
+        // Tidak ada filter tanggal karena kolom tanggal tidak tersedia
         // ══════════════════════════════════════════════════════
         if (str_contains($t, 'siklus') || str_contains($t, 'menstruasi') || str_contains($t, 'riwayat')) {
             $rows = [];
 
             foreach ($db->selectCollection('cycles')->find([]) as $doc) {
                 $doc = (array) $doc;
-                $tgl = $doc['tanggal_mulai_haid'] ?? '';
-
-                // Filter rentang tanggal — format DB sudah "Y-m-d" jadi bisa compare string
-                if ($tgl === '' || $tgl < $dari || $tgl > $sampai) {
-                    continue;
-                }
 
                 $rows[] = [
-                    $doc['id_user']              ?? '',
-                    $doc['id_siklus']            ?? '',
-                    $tgl,
-                    $doc['tanggal_selesai_haid'] ?? '',
-                    $doc['menstruation_length']  ?? '',
-                    $doc['cycle_length_days']    ?? '',
-                    $doc['prev_cycle_length']    ?? '',
-                    $doc['cycle_status']         ?? '',
-                    $doc['pattern']              ?? '',
-                    $doc['current_phase']        ?? '',
-                    $doc['flow_level']           ?? '',
-                    $doc['pain_level']           ?? '',
-                    $doc['pms_symptoms']         ?? '',
-                    $doc['mood_score']           ?? '',
-                    $doc['stress_score_cycle']   ?? '',
-                    $doc['sleep_hours_cycle']    ?? '',
-                    $doc['energy_level']         ?? '',
-                    $doc['concentration_score']  ?? '',
-                    $doc['work_hours_lost']      ?? '',
-                    $doc['estrogen_pgml']        ?? '',
-                    $doc['progesterone_ngml']    ?? '',
-                    $doc['predicted_ovulation']  ?? '',
+                    $doc['user_id']           ?? '',
+                    $doc['cycle_length_days'] ?? '',
+                    $doc['prev_cycle_length'] ?? '',
+                    $doc['pain_level']        ?? '',
+                    $doc['stress_score_cycle']?? '',
+                    $doc['sleep_hours_cycle'] ?? '',
+                    $doc['mood_score']        ?? '',
                 ];
             }
 
             $headers = [
-                'ID User', 'ID Siklus',
-                'Tgl Mulai Haid', 'Tgl Selesai Haid',
-                'Lama Menstruasi (hari)', 'Panjang Siklus (hari)', 'Panjang Siklus Sebelumnya',
-                'Status Siklus', 'Pola', 'Fase Saat Ini',
-                'Flow Level', 'Pain Level', 'PMS Symptoms',
-                'Mood Score', 'Stress Score', 'Sleep Hours',
-                'Energy Level', 'Concentration Score', 'Work Hours Lost',
-                'Estrogen (pg/mL)', 'Progesterone (ng/mL)', 'Prediksi Ovulasi',
+                'ID User',
+                'Panjang Siklus (hari)', 'Panjang Siklus Sebelumnya',
+                'Pain Level', 'Stress Score', 'Sleep Hours',
+                'Mood Score',
             ];
             return [$rows, $headers, 'Riwayat_Siklus_Menstruasi'];
         }
@@ -237,7 +198,6 @@ class LaporanController extends Controller
         // TEMPLATE 3: Ringkasan Prediksi AI
         // Collection: predictions
         // Header dibangun DINAMIS dari dokumen pertama
-        // agar tidak kosong meskipun nama field tidak diketahui
         // ══════════════════════════════════════════════════════
         $rows        = [];
         $headers     = [];
