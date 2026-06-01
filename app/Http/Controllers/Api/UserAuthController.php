@@ -74,15 +74,12 @@ class UserAuthController extends Controller
                 'password' => 'required|string|min:6',
             ]);
 
-            // Generate id_user incremental
             $lastUser = User::orderBy('id_user', 'desc')->first();
             $nextId = $lastUser ? $lastUser->id_user + 1 : 1;
 
-            // Generate OTP dan token verifikasi
             $otp = $this->generateOtp();
             $verificationToken = $this->generateVerificationToken();
 
-            // Simpan user dengan status belum terverifikasi
             $user = User::create([
                 'id_user' => $nextId,
                 'name' => $request->name,
@@ -95,7 +92,6 @@ class UserAuthController extends Controller
                 'nama_lengkap' => $request->name,
             ]);
 
-            // Simpan OTP ke collection email_verifications
             EmailVerification::updateOrCreate(
                 ['email' => $request->email],
                 [
@@ -105,7 +101,6 @@ class UserAuthController extends Controller
                 ]
             );
 
-            // Log OTP untuk development (hapus di production)
             Log::info('OTP untuk ' . $request->email . ': ' . $otp);
 
             return response()->json([
@@ -164,11 +159,9 @@ class UserAuthController extends Controller
                 ], 400);
             }
 
-            // Generate OTP baru
             $otp = $this->generateOtp();
             $verificationToken = $this->generateVerificationToken();
 
-            // Update OTP di database
             EmailVerification::updateOrCreate(
                 ['email' => $request->email],
                 [
@@ -178,11 +171,9 @@ class UserAuthController extends Controller
                 ]
             );
 
-            // Update user verification token
             $user->verification_token = $verificationToken;
             $user->save();
 
-            // Log OTP untuk development
             Log::info('Resend OTP untuk ' . $request->email . ': ' . $otp);
 
             return response()->json([
@@ -231,7 +222,6 @@ class UserAuthController extends Controller
                 ], 400);
             }
 
-            // Cek expired (15 menit)
             if (now()->isAfter($verification->expires_at)) {
                 $verification->delete();
                 return response()->json([
@@ -240,16 +230,12 @@ class UserAuthController extends Controller
                 ], 400);
             }
 
-            // Update user menjadi verified
             $user = User::where('email', $request->email)->first();
             $user->email_verified = true;
             $user->status = 'Aktif';
             $user->save();
 
-            // Generate token untuk login (manual)
             $token = $this->generateToken($user);
-
-            // Hapus verification data
             $verification->delete();
 
             return response()->json([
@@ -312,7 +298,6 @@ class UserAuthController extends Controller
                 ], 401);
             }
 
-            // Cek apakah email sudah diverifikasi
             if (!$user->email_verified) {
                 return response()->json([
                     'success' => false,
@@ -320,7 +305,6 @@ class UserAuthController extends Controller
                 ], 403);
             }
 
-            // Cek status akun
             if ($user->status !== 'Aktif') {
                 return response()->json([
                     'success' => false,
@@ -328,7 +312,6 @@ class UserAuthController extends Controller
                 ], 403);
             }
 
-            // Generate token manual
             $token = $this->generateToken($user);
 
             return response()->json([
@@ -375,126 +358,138 @@ class UserAuthController extends Controller
         ]);
     }
 
- /**
- * Get profile user
- * GET /api/mobile/user/profile
- */
-public function profile(Request $request)
-{
-    try {
-        // User sudah di-attach oleh middleware
-        $user = $request->user;
-        
-        if (!$user) {
+    /**
+     * Get profile user
+     * GET /api/mobile/user/profile
+     */
+    public function profile(Request $request)
+    {
+        try {
+            $user = $request->user;
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User tidak ditemukan'
+                ], 401);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'user' => [
+                        'id_user' => $user->id_user,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'status' => $user->status,
+                        'email_verified' => $user->email_verified,
+                        'nama_lengkap' => $user->nama_lengkap,
+                        'no_telepon' => $user->no_telepon,
+                        'age' => $user->age,
+                        'weight_kg' => $user->weight_kg,
+                        'height_cm' => $user->height_cm,
+                        'bmi' => $user->bmi,
+                        'pcos_diagnosed' => $user->pcos_diagnosed ?? false,      // TAMBAH
+                        'birth_control_use' => $user->birth_control_use ?? false, // TAMBAH
+                    ]
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Get profile error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'User tidak ditemukan'
-            ], 401);
+                'message' => 'Gagal mengambil data profile'
+            ], 500);
         }
-        
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'user' => [
-                    'id_user' => $user->id_user,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'status' => $user->status,
-                    'email_verified' => $user->email_verified,
-                    'nama_lengkap' => $user->nama_lengkap,
-                    'no_telepon' => $user->no_telepon,
-                    'age' => $user->age,
-                    'weight_kg' => $user->weight_kg,
-                    'height_cm' => $user->height_cm,
-                    'bmi' => $user->bmi,
+    }
+
+    /**
+     * Update profile user
+     * PUT /api/mobile/user/profile
+     */
+    public function updateProfile(Request $request)
+    {
+        try {
+            $user = $request->user;
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User tidak ditemukan'
+                ], 404);
+            }
+            
+            $request->validate([
+                'nama_lengkap' => 'nullable|string|max:255',
+                'no_telepon' => 'nullable|string|max:15',
+                'age' => 'nullable|integer|min:10|max:100',
+                'weight_kg' => 'nullable|numeric|min:20|max:300',
+                'height_cm' => 'nullable|numeric|min:50|max:250',
+                'pcos_diagnosed' => 'nullable|boolean',      // TAMBAH
+                'birth_control_use' => 'nullable|boolean',   // TAMBAH
+            ]);
+            
+            // Update field
+            if ($request->has('nama_lengkap')) {
+                $user->nama_lengkap = $request->nama_lengkap;
+            }
+            if ($request->has('no_telepon')) {
+                $user->no_telepon = $request->no_telepon;
+            }
+            if ($request->has('age')) {
+                $user->age = $request->age;
+            }
+            if ($request->has('weight_kg')) {
+                $user->weight_kg = $request->weight_kg;
+            }
+            if ($request->has('height_cm')) {
+                $user->height_cm = $request->height_cm;
+            }
+            if ($request->has('pcos_diagnosed')) {
+                $user->pcos_diagnosed = $request->pcos_diagnosed;
+            }
+            if ($request->has('birth_control_use')) {
+                $user->birth_control_use = $request->birth_control_use;
+            }
+            
+            // Hitung BMI
+            if ($user->weight_kg && $user->height_cm) {
+                $heightM = $user->height_cm / 100;
+                $user->bmi = round($user->weight_kg / ($heightM * $heightM), 1);
+            }
+            
+            $user->save();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile berhasil diupdate',
+                'data' => [
+                    'user' => [
+                        'nama_lengkap' => $user->nama_lengkap,
+                        'no_telepon' => $user->no_telepon,
+                        'age' => $user->age,
+                        'weight_kg' => $user->weight_kg,
+                        'height_cm' => $user->height_cm,
+                        'bmi' => $user->bmi,
+                        'pcos_diagnosed' => $user->pcos_diagnosed,
+                        'birth_control_use' => $user->birth_control_use,
+                    ]
                 ]
-            ]
-        ]);
-        
-    } catch (\Exception $e) {
-        Log::error('Get profile error: ' . $e->getMessage());
-        return response()->json([
-            'success' => false,
-            'message' => 'Gagal mengambil data profile'
-        ], 500);
+            ]);
+            
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Profile update error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal update profile: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
-
-/**
- * Update profile user
- * PUT /api/mobile/user/profile
- */
-public function updateProfile(Request $request)
-{
-    try {
-        $user = $request->user;
-        
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User tidak ditemukan'
-            ], 404);
-        }
-        
-        $request->validate([
-            'nama_lengkap' => 'nullable|string|max:255',
-            'no_telepon' => 'nullable|string|max:15',
-            'age' => 'nullable|integer|min:10|max:100',
-            'weight_kg' => 'nullable|numeric|min:20|max:300',
-            'height_cm' => 'nullable|numeric|min:50|max:250',
-        ]);
-        
-        // Update field
-        if ($request->has('nama_lengkap')) {
-            $user->nama_lengkap = $request->nama_lengkap;
-        }
-        if ($request->has('no_telepon')) {
-            $user->no_telepon = $request->no_telepon;
-        }
-        if ($request->has('age')) {
-            $user->age = $request->age;
-        }
-        if ($request->has('weight_kg')) {
-            $user->weight_kg = $request->weight_kg;
-        }
-        if ($request->has('height_cm')) {
-            $user->height_cm = $request->height_cm;
-        }
-        
-        // Hitung BMI
-        if ($user->weight_kg && $user->height_cm) {
-            $heightM = $user->height_cm / 100;
-            $user->bmi = round($user->weight_kg / ($heightM * $heightM), 1);
-        }
-        
-        $user->save();
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Profile berhasil diupdate',
-            'data' => [
-                'user' => [
-                    'nama_lengkap' => $user->nama_lengkap,
-                    'no_telepon' => $user->no_telepon,
-                    'age' => $user->age,
-                    'weight_kg' => $user->weight_kg,
-                    'height_cm' => $user->height_cm,
-                    'bmi' => $user->bmi,
-                ]
-            ]
-        ]);
-        
-    } catch (ValidationException $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Validasi gagal',
-            'errors' => $e->errors()
-        ], 422);
-    } catch (\Exception $e) {
-        Log::error('Profile update error: ' . $e->getMessage());
-        return response()->json([
-            'success' => false,
-            'message' => 'Gagal update profile: ' . $e->getMessage()
-        ], 500);
-    }
-}}
