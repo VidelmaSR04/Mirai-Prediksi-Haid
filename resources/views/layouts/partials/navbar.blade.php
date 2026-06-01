@@ -30,7 +30,7 @@
                 </a>
             </div>
 
-            
+
             {{-- Action Buttons --}}
             <div class="flex items-center gap-3">
 
@@ -42,7 +42,7 @@
                 </button>
 
                 {{-- Auth --}}
-                @if (Route::has('login'))
+                {{-- @if (Route::has('login'))
                     @auth
                         <a href="{{ url('/dashboard') }}" class="px-5 py-2 rounded-full bg-baby-pink/30 font-bold text-sm">
                             Dashboard
@@ -54,7 +54,7 @@
                         </a>
 
                     @endauth
-                @endif
+                @endif--}}
 
             </div>
 
