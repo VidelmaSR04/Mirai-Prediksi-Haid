@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/logo.png" alt="MIRAI Logo" width="180">
+  <img src="img/logo fix.png" alt="MIRAI Logo" width="180">
 </p>
 
 <h1 align="center">MIRAI ADMIN PANEL</h1>
