@@ -54,14 +54,11 @@ Melihat dan mengelola data riwayat siklus menstruasi yang tersimpan dalam sistem
 ### 📊 Monitoring Prediksi
 Menampilkan hasil prediksi siklus menstruasi yang dihasilkan sistem.
 
-### 🤖 Monitoring Chatbot
-Memantau aktivitas chatbot dan interaksi pengguna.
+### 🤖 Unduh Laporan
+Untuk mengunduh laporan dari prediksi perbulan.
 
 ### 📈 Dashboard Statistik
 Menyajikan ringkasan data dan statistik penggunaan aplikasi dalam bentuk dashboard.
-
-### 🔐 Manajemen Hak Akses
-Mengelola autentikasi dan akses administrator sistem.
 
 ---
 
@@ -89,7 +86,7 @@ Model dibangun menggunakan Python dan Scikit-Learn, kemudian diintegrasikan deng
 - JavaScript
 
 ### Database
-- MySQL
+- MongoDb
 
 ### Machine Learning Service
 - Python
