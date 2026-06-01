@@ -16,40 +16,43 @@ class User extends Authenticatable
     protected $collection = 'users';
 
     protected $fillable = [
-        'id_user',
-        'name',
-        'email',
-        'password',
-        'status',
-        'nama_lengkap',
-        'no_telepon',
-        'age',
-        'weight_kg',
-        'height_cm',
-        'bmi',
-        'email_verified',    
-        'verification_token',
-        'created_at',
-        'updated_at',
-    ];
+    'id_user',
+    'name',
+    'email',
+    'password',
+    'status',
+    'nama_lengkap',
+    'no_telepon',
+    'age',
+    'weight_kg',
+    'height_cm',
+    'bmi',
+    'email_verified',
+    'verification_token',
+    'pcos_diagnosed',        // ← TAMBAH
+    'birth_control_use',     // ← TAMBAH
+    'created_at',
+    'updated_at',
+];
 
+protected $casts = [
+    'email_verified_at' => 'datetime',
+    'password' => 'hashed',
+    'email_verified' => 'boolean',
+    'id_user' => 'integer',
+    'age' => 'integer',
+    'weight_kg' => 'float',
+    'height_cm' => 'float',
+    'bmi' => 'float',
+    'pcos_diagnosed' => 'boolean',      // ← TAMBAH
+    'birth_control_use' => 'boolean',   // ← TAMBAH
+    'created_at' => 'datetime',
+    'updated_at' => 'datetime',
+];
     protected $hidden = [
         'password',
         'remember_token',
         'verification_token',
-    ];
-
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-        'email_verified' => 'boolean',
-        'id_user' => 'integer',
-        'age' => 'integer',
-        'weight_kg' => 'float',
-        'height_cm' => 'float',
-        'bmi' => 'float',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
     ];
     
     /**
