@@ -79,7 +79,7 @@
                     </div>
                     <div class="flex-1">
                         <p class="font-semibold text-slate-800">Profil & Demografi Pengguna</p>
-                        <p class="text-xs text-slate-500 mt-0.5">Nama, email, usia, BMI, domisili & status akun</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Data identitas dan kondisi kesehatan pengguna</p>
                     </div>
                 </div>
 
@@ -91,7 +91,7 @@
                     </div>
                     <div class="flex-1">
                         <p class="font-semibold text-slate-800">Riwayat Siklus Menstruasi</p>
-                        <p class="text-xs text-slate-500 mt-0.5">Data siklus, gejala, hormon & rata-rata per pengguna</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Riwayat siklus dan gejala per pengguna</p>
                     </div>
                 </div>
 
@@ -103,7 +103,7 @@
                     </div>
                     <div class="flex-1">
                         <p class="font-semibold text-slate-800">Ringkasan Prediksi AI</p>
-                        <p class="text-xs text-slate-500 mt-0.5">Hasil prediksi, tingkat risiko & rekomendasi sistem</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Hasil prediksi siklus dan skor kesehatan</p>
                     </div>
                 </div>
 
@@ -144,7 +144,7 @@
                 <button type="submit"
                         class="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-4 rounded-2xl flex items-center justify-center gap-3 transition">
                     <span class="material-symbols-outlined">download</span>
-                    Buat & Unduh Laporan CSV
+                    Unduh Laporan CSV
                 </button>
             </form>
         </div>
