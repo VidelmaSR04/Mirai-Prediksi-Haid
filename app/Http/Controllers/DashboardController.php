@@ -8,6 +8,12 @@ use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
+    // Hasil evaluasi model Linear Regression
+    // Sumber: perbandingan algoritma Python
+    private const MODEL_MAE  = 1.72;
+    private const MODEL_RMSE = 2.21;
+    private const MODEL_R2   = 0.1654;
+
     private function getDb()
     {
         $client = new MongoClient(env('MONGODB_URI', 'mongodb://127.0.0.1:27017'));
@@ -18,8 +24,7 @@ class DashboardController extends Controller
     {
         try {
             $db = $this->getDb();
-            $cyclesCol      = $db->selectCollection('cycles');
-            $predictionsCol = $db->selectCollection('predictions');
+            $cyclesCol = $db->selectCollection('cycles');
 
             // 1. Total Data Siklus
             $totalSiklus = $cyclesCol->countDocuments();
@@ -30,7 +35,9 @@ class DashboardController extends Controller
                 ['$group' => ['_id' => null, 'avg' => ['$avg' => '$cycle_length_days']]]
             ])->toArray();
 
-            $rataSiklus = !empty($avgResult) ? round($avgResult[0]['avg'] ?? 0, 1) : 0;
+            $rataSiklus = !empty($avgResult)
+                ? round($avgResult[0]['avg'] ?? 0, 1)
+                : 0;
 
             // 3. Persentase Siklus Normal (21-35 hari)
             $normalCount = $cyclesCol->countDocuments([
@@ -41,32 +48,16 @@ class DashboardController extends Controller
                 ? round(($normalCount / $totalSiklus) * 100, 1)
                 : 0;
 
-            // 4. Metrik Model Terbaru (aman dari null)
-            $latestPrediction = $predictionsCol->findOne(
-                [],
-                ['sort' => ['created_at' => -1]]
-            );
-
+            // 4. Metrik Model — dari hasil evaluasi Python (Linear Regression)
             $stats = [
                 'rata_siklus'   => $rataSiklus,
                 'persen_normal' => $persenNormal,
                 'total_siklus'  => $totalSiklus,
-                'mae'           => 0,
-                'rmse'          => 0,
-                'r2'            => 0,
+                'mae'           => self::MODEL_MAE,
+                'rmse'          => self::MODEL_RMSE,
+                'r2'            => self::MODEL_R2,
+                'model_name'    => 'Linear Regression',
             ];
-
-            // Isi data model jika ada dokumen
-            if ($latestPrediction) {
-                $stats['mae']  = round($latestPrediction['mae_error']   ??
-                                     $latestPrediction['mae']          ?? 0, 2);
-
-                $stats['rmse'] = round($latestPrediction['rmse_error']  ??
-                                     $latestPrediction['prediction_error'] ?? 0, 2);
-
-                $stats['r2']   = round($latestPrediction['r2_score']    ??
-                                     $latestPrediction['confidence_score'] ?? 0, 2);
-            }
 
             return view('admin.dashboard.index', compact('stats'));
 
@@ -78,11 +69,12 @@ class DashboardController extends Controller
                     'rata_siklus'   => 0,
                     'persen_normal' => 0,
                     'total_siklus'  => 0,
-                    'mae'           => 0,
-                    'rmse'          => 0,
-                    'r2'            => 0
+                    'mae'           => self::MODEL_MAE,
+                    'rmse'          => self::MODEL_RMSE,
+                    'r2'            => self::MODEL_R2,
+                    'model_name'    => 'Linear Regression',
                 ],
-                'error' => 'Gagal memuat dashboard: ' . $e->getMessage()
+                'error' => 'Gagal memuat data siklus: ' . $e->getMessage()
             ]);
         }
     }
