@@ -74,7 +74,6 @@ $stats = $stats ?? [
     'persen_normal' => 0,
     'total_siklus'  => 0,
     'mae'           => 0,
-    'rmse'          => 0,
     'r2'            => 0,
 ];
 @endphp
@@ -141,18 +140,6 @@ $stats = $stats ?? [
             </div>
         </div>
 
-        <div class="fade-in d5 stat-card bg-white rounded-3xl border border-rose-100 shadow-sm">
-            <div class="flex items-center gap-6">
-                <div class="w-16 h-16 rounded-2xl bg-violet-50 flex items-center justify-center flex-shrink-0">
-                    <span class="material-symbols-outlined text-violet-500 text-5xl">analytics</span>
-                </div>
-                <div>
-                    <p class="stat-number text-slate-800">{{ $stats['rmse'] }}</p>
-                    <p class="stat-label">RMSE MODEL</p>
-                    <p class="stat-subtext">Root Mean Square Error (hari)</p>
-                </div>
-            </div>
-        </div>
 
         <div class="fade-in d6 stat-card bg-white rounded-3xl border border-rose-100 shadow-sm">
             <div class="flex items-center gap-6">
