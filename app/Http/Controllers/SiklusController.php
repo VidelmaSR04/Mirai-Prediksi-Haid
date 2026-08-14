@@ -18,11 +18,35 @@ class SiklusController extends Controller
     }
 
     // ----------------------------------------------------------------
-    // Ambil semua siklus — hanya field yang ADA di collection cycles
+    // Helper: konversi tanggal (string ATAU objek MongoDB BSON
+    // UTCDateTime) menjadi \DateTime PHP biasa.
+    // ----------------------------------------------------------------
+    private function normalizeDate($date): ?\DateTime
+    {
+        if ($date instanceof \MongoDB\BSON\UTCDateTime) {
+            return $date->toDateTime();
+        }
+
+        if (is_string($date) && $date !== '') {
+            try {
+                return new \DateTime($date);
+            } catch (\Exception $e) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    // ----------------------------------------------------------------
+    // Ambil semua siklus — field aktual di collection cycles:
+    //   user_id, last_period_date, previous_period_date,
+    //   cycle_length_days, pain_level, stress_score_cycle,
+    //   sleep_hours_cycle, mood_score
     //
-    // Field aktual di MongoDB cycles:
-    //   user_id, cycle_length_days, prev_cycle_length,
-    //   pain_level, stress_score_cycle, sleep_hours_cycle, mood_score
+    // CATATAN: field 'prev_cycle_length' TIDAK ada di database.
+    // Panjang siklus sebelumnya dihitung dari selisih hari antara
+    // last_period_date dan previous_period_date.
     // ----------------------------------------------------------------
     private function getAllCycles(): array
     {
@@ -30,13 +54,26 @@ class SiklusController extends Controller
         foreach ($this->getDb()->selectCollection('cycles')->find([]) as $doc) {
             $doc = (array) $doc;
 
+            // Hitung panjang siklus SEBELUMNYA dari selisih dua tanggal
+            $lastDt = $this->normalizeDate($doc['last_period_date'] ?? null);
+            $prevDt = $this->normalizeDate($doc['previous_period_date'] ?? null);
+
+            $prevCycleLength = null;
+            if ($lastDt && $prevDt) {
+                $prevCycleLength = $lastDt->diff($prevDt)->days;
+            } elseif (isset($doc['prev_cycle_length'])) {
+                // fallback kalau suatu saat field ini memang ditambahkan manual
+                $prevCycleLength = (int) $doc['prev_cycle_length'];
+            }
+
             $all[] = [
                 'user_id'            => isset($doc['user_id']) ? (string) $doc['user_id'] : null,
                 'cycle_length_days'  => isset($doc['cycle_length_days'])  ? (int) $doc['cycle_length_days']  : null,
-                'prev_cycle_length'  => isset($doc['prev_cycle_length'])  ? (int) $doc['prev_cycle_length']  : null,
+                'prev_cycle_length'  => $prevCycleLength,
                 'pain_level'         => isset($doc['pain_level'])         ? (int) $doc['pain_level']         : null,
                 'stress_score_cycle' => $doc['stress_score_cycle'] ?? null,
-                'sleep_hours_cycle'  => $doc['sleep_hours_cycle']  ?? null,
+                // Dibulatkan ke bilangan bulat terdekat agar tidak tampil desimal/koma
+                'sleep_hours_cycle'  => isset($doc['sleep_hours_cycle']) ? (int) round($doc['sleep_hours_cycle']) : null,
                 'mood_score'         => isset($doc['mood_score'])         ? (int) $doc['mood_score']         : null,
             ];
         }
@@ -50,7 +87,6 @@ class SiklusController extends Controller
     private function getUserMap(): array
     {
         $map = [];
-
 
         foreach ($this->getDb()->selectCollection('users')->find([]) as $doc) {
             $doc = (array) $doc;
@@ -92,7 +128,8 @@ class SiklusController extends Controller
             }
             unset($s);
 
-            // Search by nama atau user_id
+            // Search by nama atau user_id (tetap didukung di backend untuk
+            // kompatibilitas / kalau nanti dipakai lagi via query string)
             $search = trim($request->get('search', ''));
             if ($search !== '') {
                 $q         = strtolower($search);
@@ -104,7 +141,7 @@ class SiklusController extends Controller
                 ));
             }
 
-            // Filter pain level (ringan/sedang/berat) — opsional
+            // Filter pain level (ringan/sedang/berat)
             $filterPain = $request->get('pain');
             if ($filterPain !== null && $filterPain !== '') {
                 $allCycles = array_values(array_filter($allCycles, function ($s) use ($filterPain) {
