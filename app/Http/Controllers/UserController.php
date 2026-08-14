@@ -4,37 +4,38 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use MongoDB\Client as MongoClient;
+use MongoDB\BSON\ObjectId;
 use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
-    // ----------------------------------------------------------------
-    // Koneksi MongoDB
-    // ----------------------------------------------------------------
+    /**
+     * Mendapatkan koneksi database MongoDB
+     */
     private function getDb()
     {
         $client = new MongoClient(env('MONGODB_URI', 'mongodb://127.0.0.1:27017'));
         return $client->selectDatabase(env('MONGODB_DATABASE', 'mirai'));
     }
 
-    // ----------------------------------------------------------------
-    // Ambil semua user — hanya field yang ada di MongoDB
-    // ----------------------------------------------------------------
+    /**
+     * Mengambil semua data user dari MongoDB
+     */
     private function getAllUsers(): array
     {
         $users = [];
+        $collection = $this->getDb()->selectCollection('users');
 
-        foreach ($this->getDb()->selectCollection('users')->find([]) as $doc) {
-            $doc = (array) $doc;
-
+        foreach ($collection->find() as $doc) {
             $users[] = [
-                'user_id'           => $doc['user_id']           ?? null,
-                'nama_lengkap'      => $doc['nama_lengkap']      ?? '-',
-                'email'             => $doc['email']             ?? '-',
+                '_id'               => (string) $doc['_id'],                             // ObjectId asli -> dipakai untuk fetch detail
+                'user_id'           => $doc['id_user'] ?? (string) $doc['_id'],           // Nomor urut -> hanya untuk label tampilan
+                'nama_lengkap'      => $doc['nama_lengkap'] ?? $doc['nama'] ?? '-',
+                'email'             => $doc['email'] ?? '-',
                 'status'            => ucfirst(strtolower($doc['status'] ?? 'aktif')),
-                'age'               => $doc['age']               ?? '-',
-                'bmi'               => $doc['bmi']               ?? '-',
-                'pcos_diagnosed'    => $doc['pcos_diagnosed']    ?? 0,
+                'age'               => $doc['age'] ?? $doc['umur'] ?? '-',
+                'bmi'               => $doc['bmi'] ?? '-',
+                'pcos_diagnosed'    => $doc['pcos_diagnosed'] ?? 0,
                 'birth_control_use' => $doc['birth_control_use'] ?? 0,
             ];
         }
@@ -42,18 +43,18 @@ class UserController extends Controller
         return $users;
     }
 
-    // ----------------------------------------------------------------
-    // INDEX — daftar pengguna dengan search, filter status, pagination
-    // ----------------------------------------------------------------
+    /**
+     * Menampilkan halaman daftar pengguna
+     */
     public function index(Request $request)
     {
         try {
             $allUsers = $this->getAllUsers();
 
-            // Search by nama atau email
+            // Fitur Pencarian
             $search = trim($request->get('search', ''));
             if ($search !== '') {
-                $q        = strtolower($search);
+                $q = strtolower($search);
                 $allUsers = array_values(array_filter(
                     $allUsers,
                     fn($u) =>
@@ -62,7 +63,7 @@ class UserController extends Controller
                 ));
             }
 
-            // Filter status
+            // Filter Status
             $status = trim($request->get('status', ''));
             if ($status !== '') {
                 $allUsers = array_values(array_filter(
@@ -71,29 +72,21 @@ class UserController extends Controller
                 ));
             }
 
-            // Pagination
+            // Pagination Manual
             $perPage     = 10;
             $currentPage = max(1, (int) $request->get('page', 1));
             $total       = count($allUsers);
             $totalPages  = max(1, (int) ceil($total / $perPage));
             $pageUsers   = array_slice($allUsers, ($currentPage - 1) * $perPage, $perPage);
 
-            // Stats untuk header / card summary (opsional)
+            // Statistik Ringkasan
             $stats = [
                 'total' => $total,
-                'aktif' => count(array_filter(
-                    $allUsers,
-                    fn($u) => strtolower($u['status']) === 'aktif'
-                )),
+                'aktif' => count(array_filter($allUsers, fn($u) => strtolower($u['status']) === 'aktif')),
             ];
 
             return view('admin.pengguna.index', compact(
-                'pageUsers',
-                'stats',
-                'total',
-                'totalPages',
-                'currentPage',
-                'search'
+                'pageUsers', 'stats', 'total', 'totalPages', 'currentPage', 'search'
             ));
 
         } catch (\Exception $e) {
@@ -111,34 +104,37 @@ class UserController extends Controller
         }
     }
 
-    // ----------------------------------------------------------------
-    // SHOW — detail satu user untuk modal AJAX
-    // field user_id di MongoDB adalah string seperti "U00001"
-    // ----------------------------------------------------------------
+    /**
+     * Mengambil detail satu pengguna untuk Modal (via AJAX)
+     * Catatan: $id yang diterima di sini HARUS berupa ObjectId MongoDB
+     * (24 karakter hex), bukan id_user biasa. Frontend (index.blade.php)
+     * sudah diperbaiki agar mengirim $u['_id'], bukan $u['user_id'].
+     */
     public function show($id)
     {
         try {
-            $user = null;
+            $collection = $this->getDb()->selectCollection('users');
 
-            // Cari berdasarkan field user_id (string)
-            foreach ($this->getDb()->selectCollection('users')->find(['user_id' => $id]) as $doc) {
-                $user = (array) $doc;
-                break;
+            // Validasi format ObjectId MongoDB
+            if (!preg_match('/^[a-f0-9]{24}$/i', $id)) {
+                return response()->json(['error' => 'Format ID tidak valid'], 400);
             }
+
+            $user = $collection->findOne(['_id' => new ObjectId($id)]);
 
             if (!$user) {
-                return response()->json(['error' => 'Pengguna tidak ditemukan.'], 404);
+                return response()->json(['error' => 'Pengguna tidak ditemukan'], 404);
             }
 
-            // Kembalikan hanya 8 field yang ada di MongoDB
+            // Kembalikan data JSON
             return response()->json([
-                'user_id'           => $user['user_id']           ?? null,
-                'nama_lengkap'      => $user['nama_lengkap']      ?? '-',
-                'email'             => $user['email']             ?? '-',
+                'user_id'           => $user['id_user'] ?? (string) $user['_id'],
+                'nama_lengkap'      => $user['nama_lengkap'] ?? $user['nama'] ?? '-',
+                'email'             => $user['email'] ?? '-',
                 'status'            => ucfirst(strtolower($user['status'] ?? 'aktif')),
-                'age'               => $user['age']               ?? '-',
-                'bmi'               => $user['bmi']               ?? '-',
-                'pcos_diagnosed'    => $user['pcos_diagnosed']    ?? 0,
+                'age'               => $user['age'] ?? $user['umur'] ?? '-',
+                'bmi'               => $user['bmi'] ?? '-',
+                'pcos_diagnosed'    => $user['pcos_diagnosed'] ?? 0,
                 'birth_control_use' => $user['birth_control_use'] ?? 0,
             ]);
 
