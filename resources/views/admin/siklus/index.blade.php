@@ -95,31 +95,25 @@
 {{-- ============================================================ --}}
 <div class="bg-white border border-rose-100 rounded-2xl overflow-hidden shadow-sm">
 
-    {{-- Table header + search --}}
+    {{-- Table header + FILTER LIVE (bukan lagi form GET, langsung filter tanpa reload) --}}
     <div class="p-7 flex items-center justify-between border-b border-rose-50 flex-wrap gap-4">
         <div>
             <h4 class="text-base font-bold text-slate-800">Catatan Siklus Pengguna</h4>
-            <p class="text-xs text-slate-400 mt-0.5">
+            <p class="text-xs text-slate-400 mt-0.5" id="entriInfo">
                 {{ number_format($total ?? 0) }} entri data siklus historis
             </p>
         </div>
-        <form method="GET" action="{{ route('admin.siklus') }}">
-            @if(!empty($filterPain))
-                <input type="hidden" name="pain" value="{{ $filterPain }}">
-            @endif
-            <div class="relative">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                      style="font-size:18px">search</span>
-                <input type="text" name="search" value="{{ $search ?? '' }}"
-                       placeholder="Cari nama atau ID..."
-                       class="pl-9 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm
-                              focus:ring-2 focus:ring-primary/20 outline-none w-64"
-                       onchange="this.form.submit()"/>
-            </div>
-        </form>
+        <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  style="font-size:18px">search</span>
+            <input type="text" id="filterInput" onkeyup="filterSiklusTable()"
+                   placeholder="Cari nama atau ID..."
+                   class="pl-9 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm
+                          focus:ring-2 focus:ring-primary/20 outline-none w-64"/>
+        </div>
     </div>
 
-    {{-- Filter Pain Level Tabs --}}
+    {{-- Filter Pain Level Tabs (tetap server-side, karena bergantung ke pagination) --}}
     <div class="px-7 py-4 flex flex-wrap gap-2 border-b border-rose-50">
         @php
             $painTabs = [
@@ -130,7 +124,7 @@
             ];
         @endphp
         @foreach($painTabs as $val => $tab)
-        <a href="{{ route('admin.siklus', array_filter(['pain' => $val ?: null, 'search' => $search ?? ''])) }}"
+        <a href="{{ route('admin.siklus', array_filter(['pain' => $val ?: null])) }}"
            class="px-5 py-2 text-sm font-semibold rounded-2xl transition-all
                   {{ ($filterPain ?? '') === $val
                         ? $tab['active']
@@ -148,14 +142,14 @@
                     <th class="px-7 py-4">Pengguna</th>
                     <th class="px-5 py-4 text-center">Panjang Siklus</th>
                     <th class="px-5 py-4 text-center">Siklus Sebelumnya</th>
-                    <th class="px-5 py-4 text-center">Pain Level</th>
+                    <th class="px-5 py-4 text-center">Tingkat Nyeri</th>
                     <th class="px-5 py-4 text-center">Stress</th>
                     <th class="px-5 py-4 text-center">Tidur (jam)</th>
                     <th class="px-5 py-4 text-center">Mood</th>
                     <th class="px-5 py-4 text-center">Status Siklus</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-rose-50 text-sm">
+            <tbody class="divide-y divide-rose-50 text-sm" id="siklusTableBody">
             @forelse($pageSiklus ?? [] as $s)
                 @php
                     $panjang   = $s['cycle_length_days'] ?? 0;
@@ -166,8 +160,11 @@
                         : ($pain <= 6
                             ? 'bg-amber-50 text-amber-700 border-amber-100'
                             : 'bg-rose-50 text-rose-700 border-rose-100');
+                    $namaLower = strtolower($s['nama'] ?? '');
+                    $idLower   = strtolower($s['user_id'] ?? '');
                 @endphp
-                <tr class="hover:bg-rose-50/20 transition-colors">
+                <tr class="hover:bg-rose-50/20 transition-colors"
+                    data-filter="{{ $namaLower . ' ' . $idLower }}">
 
                     {{-- Pengguna --}}
                     <td class="px-7 py-4">
@@ -188,12 +185,12 @@
                         {{ $panjang ? $panjang . ' hari' : '-' }}
                     </td>
 
-                    {{-- Siklus sebelumnya --}}
+                    {{-- Siklus sebelumnya (dihitung dari selisih last_period_date & previous_period_date) --}}
                     <td class="px-5 py-4 text-center text-slate-600">
-                        {{ $s['prev_cycle_length'] ? $s['prev_cycle_length'] . ' hari' : '-' }}
+                        {{ $s['prev_cycle_length'] !== null ? $s['prev_cycle_length'] . ' hari' : '-' }}
                     </td>
 
-                    {{-- Pain level --}}
+                    {{-- Tingkat Nyeri --}}
                     <td class="px-5 py-4 text-center">
                         <span class="px-3 py-1 text-xs font-bold rounded-full border {{ $painColor }}">
                             {{ $pain ?? '-' }}
@@ -205,7 +202,7 @@
                         {{ $s['stress_score_cycle'] ?? '-' }}
                     </td>
 
-                    {{-- Tidur --}}
+                    {{-- Tidur (sudah dibulatkan di controller, tampil bulat tanpa koma) --}}
                     <td class="px-5 py-4 text-center text-slate-600">
                         {{ $s['sleep_hours_cycle'] ?? '-' }}
                     </td>
@@ -249,11 +246,16 @@
             @endforelse
             </tbody>
         </table>
+
+        {{-- Pesan saat hasil filter kosong --}}
+        <p id="noFilterResult" class="hidden text-center py-10 text-slate-400">
+            Tidak ada data siklus yang cocok dengan pencarian
+        </p>
     </div>
 
     {{-- Pagination --}}
     @if(($totalPages ?? 1) > 1)
-    <div class="px-7 py-5 border-t border-rose-50 flex items-center justify-between flex-wrap gap-3">
+    <div class="px-7 py-5 border-t border-rose-50 flex items-center justify-between flex-wrap gap-3" id="paginationBar">
         <p class="text-xs text-slate-400">
             Menampilkan
             {{ number_format((($currentPage ?? 1) - 1) * 10 + 1) }}–{{ number_format(min(($currentPage ?? 1) * 10, $total ?? 0)) }}
@@ -306,7 +308,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const total = values.reduce((a, b) => a + b, 0);
     if (!total) return;
 
-    new Chart(document.getElementById('distribusiChart'), {
+    const el = document.getElementById('distribusiChart');
+    if (!el) return;
+
+    new Chart(el, {
         type: 'doughnut',
         data: {
             labels: labels,
@@ -346,5 +351,33 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
+// ==================== FILTER LIVE Data Siklus (client-side) ====================
+// Memfilter baris tabel berdasarkan teks yang diketik, mencocokkan Nama atau ID.
+// Bekerja pada data-filter yang sudah disiapkan tiap <tr> di blade di atas.
+function filterSiklusTable() {
+    const keyword     = document.getElementById('filterInput').value.trim().toLowerCase();
+    const rows        = document.querySelectorAll('#siklusTableBody tr[data-filter]');
+    const noResult    = document.getElementById('noFilterResult');
+    const pagination  = document.getElementById('paginationBar');
+
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+        const match = row.getAttribute('data-filter').includes(keyword);
+        row.style.display = match ? '' : 'none';
+        if (match) visibleCount++;
+    });
+
+    if (noResult) {
+        noResult.classList.toggle('hidden', visibleCount !== 0 || rows.length === 0);
+    }
+
+    // Sembunyikan pagination saat sedang memfilter, karena filter ini
+    // cuma bekerja di data pada halaman yang sedang tampil
+    if (pagination) {
+        pagination.style.display = keyword === '' ? '' : 'none';
+    }
+}
 </script>
 @endpush

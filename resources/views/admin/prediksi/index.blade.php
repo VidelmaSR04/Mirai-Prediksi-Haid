@@ -113,7 +113,7 @@
     {{-- Donut Chart Confidence --}}
     <div class="fade-in delay-3 bg-white rounded-2xl border border-rose-100 shadow-sm p-7 flex flex-col">
         <div class="mb-5">
-            <h3 class="text-base font-bold text-slate-800">Confidence Score</h3>
+            <h3 class="text-base font-bold text-slate-800">Skor Kepercayaan</h3>
             <p class="text-xs text-slate-400 mt-0.5">Rata-rata akurasi prediksi model</p>
         </div>
         <div class="flex flex-col items-center flex-1 justify-center">
@@ -172,10 +172,9 @@
                     <th class="px-6 py-4 text-center">Usia</th>
                     <th class="px-6 py-4 text-center">Panjang Siklus</th>
                     <th class="px-6 py-4">Fase Saat Ini</th>
-                    <th class="px-6 py-4">Est. Ovulasi</th>
+                    <th class="px-6 py-4">Estimasi Ovulasi</th>
                     <th class="px-6 py-4">Prediksi Haid</th>
-                    <th class="px-6 py-4 text-center">Confidence</th>
-                    <th class="px-6 py-4 text-center">MAE</th>
+                    <th class="px-6 py-4 text-center">Skor Kepercayaan</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-rose-50/70">
@@ -211,13 +210,10 @@
                             {{ $p['confidence_score'] ?? '-' }}%
                         </span>
                     </td>
-                    <td class="px-6 py-3.5 text-center">
-                        <span class="text-xs font-bold text-primary">{{ $p['mae_error'] ?? '-' }}</span>
-                    </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="px-6 py-12 text-center text-slate-400">
+                    <td colspan="7" class="px-6 py-12 text-center text-slate-400">
                         <span class="material-symbols-outlined text-4xl text-slate-300 block mb-2">search_off</span>
                         Belum ada data prediksi — import predictions.json ke MongoDB dulu
                     </td>

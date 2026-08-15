@@ -19,20 +19,26 @@
 <div class="bg-white rounded-2xl border border-rose-100 shadow-sm overflow-hidden">
 
     {{-- HEADER --}}
-    <div class="p-6 border-b border-rose-50 flex justify-between items-center">
+    <div class="p-6 border-b border-rose-50 flex justify-between items-center gap-4">
         <div>
             <h3 class="font-bold text-slate-800">Daftar Pengguna</h3>
             <p class="text-xs text-slate-400">Data pengguna sistem</p>
         </div>
 
-        <form method="GET" action="{{ route('admin.pengguna.index') }}" class="flex gap-3">
-            <select name="status" onchange="this.form.submit()"
-                    class="px-4 py-2 border border-slate-200 rounded-xl text-sm">
-                <option value="">Semua Status</option>
-                <option value="Aktif"    {{ request('status') == 'Aktif'    ? 'selected' : '' }}>Aktif</option>
-                <option value="Nonaktif" {{ request('status') == 'Nonaktif' ? 'selected' : '' }}>Nonaktif</option>
-            </select>
-        </form>
+        {{-- FILTER LIVE: memfilter tabel berdasarkan ID, Nama, atau Email --}}
+        <div class="relative w-full max-w-xs">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">
+                search
+            </span>
+            <input
+                type="text"
+                id="filterInput"
+                onkeyup="filterTable()"
+                placeholder="Filter berdasarkan ID, nama, atau email..."
+                class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-sm
+                       focus:outline-none focus:ring-2 focus:ring-rose-200"
+            >
+        </div>
     </div>
 
     {{-- TABLE --}}
@@ -43,22 +49,23 @@
                     <th class="px-6 py-4">Avatar</th>
                     <th class="px-6 py-4">Nama</th>
                     <th class="px-6 py-4">Email</th>
-                    <th class="px-6 py-4 text-center">Status</th>
                     <th class="px-6 py-4 text-center">Aksi</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-rose-50">
+            <tbody class="divide-y divide-rose-50" id="userTableBody">
             @forelse($pageUsers ?? [] as $u)
                 @php
-                    $id     = $u['user_id']     ?? $u['id_user'] ?? null;
-                    $nama   = $u['nama_lengkap'] ?? 'User';
+                    // $mongoId => ObjectId asli MongoDB, WAJIB dipakai untuk request ke backend (fetch detail)
+                    $mongoId = $u['_id'] ?? null;
+
+                    // $id => nomor urut buatan sendiri (id_user), HANYA untuk label tampilan "ID: ..."
+                    $id     = $u['user_id'] ?? $u['id_user'] ?? $mongoId ?? null;
+                    $nama   = $u['nama_lengkap'] ?? $u['nama'] ?? 'User';
                     $email  = $u['email']        ?? '-';
-                    $status = ucfirst(strtolower($u['status'] ?? 'aktif'));
-                    $statusCls = strtolower($status) === 'aktif'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        : 'bg-rose-50 text-rose-700 border-rose-200';
                 @endphp
-                <tr class="hover:bg-rose-50/10 transition-colors">
+
+                <tr class="hover:bg-rose-50/10 transition-colors"
+                    data-filter="{{ strtolower($id . ' ' . $nama . ' ' . $email) }}">
 
                     {{-- Avatar --}}
                     <td class="px-6 py-4">
@@ -68,7 +75,7 @@
                         </div>
                     </td>
 
-                    {{-- Nama + ID --}}
+                    {{-- Nama + ID (label tampilan, pakai id_user) --}}
                     <td class="px-6 py-4">
                         <p class="font-semibold text-slate-800">{{ $nama }}</p>
                         <p class="text-xs text-slate-400">ID: {{ $id ?? '-' }}</p>
@@ -77,16 +84,9 @@
                     {{-- Email --}}
                     <td class="px-6 py-4 text-sm text-slate-600">{{ $email }}</td>
 
-                    {{-- Status --}}
+                    {{-- Aksi (pakai _id / ObjectId asli untuk fetch detail) --}}
                     <td class="px-6 py-4 text-center">
-                        <span class="px-3 py-1 text-xs rounded-full border {{ $statusCls }}">
-                            {{ $status }}
-                        </span>
-                    </td>
-
-                    {{-- Aksi --}}
-                    <td class="px-6 py-4 text-center">
-                        <button onclick="showUserDetail('{{ $id }}')"
+                        <button onclick="showUserDetail('{{ $mongoId }}')"
                                 class="p-2 hover:bg-slate-100 rounded-lg inline-block text-rose-500"
                                 title="Lihat Detail">
                             <span class="material-symbols-outlined text-lg">visibility</span>
@@ -95,30 +95,67 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="text-center py-10 text-slate-400">
+                    <td colspan="4" class="text-center py-10 text-slate-400">
                         Tidak ada data pengguna
                     </td>
                 </tr>
             @endforelse
             </tbody>
         </table>
+
+        {{-- Pesan saat hasil filter kosong (disembunyikan default) --}}
+        <p id="noFilterResult" class="hidden text-center py-10 text-slate-400">
+            Tidak ada pengguna yang cocok dengan pencarian
+        </p>
     </div>
 
     {{-- PAGINATION --}}
     @if($totalPages > 1)
-    <div class="px-6 py-4 border-t border-rose-50 flex items-center justify-between">
+    <div class="px-6 py-4 border-t border-rose-50 flex items-center justify-between" id="paginationBar">
         <p class="text-sm text-slate-500">
             Menampilkan {{ ($currentPage - 1) * 10 + 1 }}–{{ min($currentPage * 10, $total) }}
             dari {{ $total }} data
         </p>
-        <div class="flex gap-2">
+
+        {{-- Tombol nomor halaman + Prev/Next, rata kanan --}}
+        <div class="flex items-center gap-1">
+
+            {{-- Prev --}}
             @if($currentPage > 1)
                 <a href="{{ request()->fullUrlWithQuery(['page' => $currentPage - 1]) }}"
-                   class="px-4 py-2 border rounded-xl text-sm hover:bg-slate-50">← Prev</a>
+                   class="w-9 h-9 flex items-center justify-center border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50">
+                    <span class="material-symbols-outlined text-base">chevron_left</span>
+                </a>
+            @else
+                <span class="w-9 h-9 flex items-center justify-center border border-slate-100 rounded-lg text-sm text-slate-300 cursor-not-allowed">
+                    <span class="material-symbols-outlined text-base">chevron_left</span>
+                </span>
             @endif
+
+            {{-- Nomor halaman --}}
+            @for ($p = 1; $p <= $totalPages; $p++)
+                @if ($p == $currentPage)
+                    <span class="w-9 h-9 flex items-center justify-center rounded-lg text-sm font-bold bg-rose-500 text-white">
+                        {{ $p }}
+                    </span>
+                @else
+                    <a href="{{ request()->fullUrlWithQuery(['page' => $p]) }}"
+                       class="w-9 h-9 flex items-center justify-center border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50">
+                        {{ $p }}
+                    </a>
+                @endif
+            @endfor
+
+            {{-- Next --}}
             @if($currentPage < $totalPages)
                 <a href="{{ request()->fullUrlWithQuery(['page' => $currentPage + 1]) }}"
-                   class="px-4 py-2 border rounded-xl text-sm hover:bg-slate-50">Next →</a>
+                   class="w-9 h-9 flex items-center justify-center border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50">
+                    <span class="material-symbols-outlined text-base">chevron_right</span>
+                </a>
+            @else
+                <span class="w-9 h-9 flex items-center justify-center border border-slate-100 rounded-lg text-sm text-slate-300 cursor-not-allowed">
+                    <span class="material-symbols-outlined text-base">chevron_right</span>
+                </span>
             @endif
         </div>
     </div>
@@ -144,9 +181,45 @@
 </div>
 
 <script>
+// ==================== FILTER LIVE (client-side) ====================
+// Memfilter baris tabel berdasarkan teks yang diketik, mencocokkan ID, Nama, atau Email.
+// Data gabungan sudah disiapkan di atribut data-filter tiap baris (lihat blade di atas).
+function filterTable() {
+    const keyword = document.getElementById('filterInput').value.trim().toLowerCase();
+    const rows    = document.querySelectorAll('#userTableBody tr[data-filter]');
+    const noResult = document.getElementById('noFilterResult');
+    const pagination = document.getElementById('paginationBar');
+
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+        const match = row.getAttribute('data-filter').includes(keyword);
+        row.style.display = match ? '' : 'none';
+        if (match) visibleCount++;
+    });
+
+    // Tampilkan pesan "tidak ditemukan" kalau semua baris tersembunyi
+    if (noResult) {
+        noResult.classList.toggle('hidden', visibleCount !== 0 || rows.length === 0);
+    }
+
+    // Sembunyikan pagination saat sedang memfilter (karena filter ini hanya bekerja
+    // pada data di halaman yang sedang tampil, bukan seluruh data di database)
+    if (pagination) {
+        pagination.style.display = keyword === '' ? '' : 'none';
+    }
+}
+
+// ==================== DETAIL MODAL ====================
 async function showUserDetail(id) {
     const modal   = document.getElementById('userModal');
     const content = document.getElementById('modalContent');
+
+    if (!id || id === '') {
+        modal.classList.remove('hidden');
+        content.innerHTML = `<p class="text-red-500 text-center py-10">ID pengguna tidak ditemukan</p>`;
+        return;
+    }
 
     content.innerHTML = `
         <div class="flex justify-center items-center py-16">
