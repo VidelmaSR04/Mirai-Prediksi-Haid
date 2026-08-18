@@ -4,54 +4,26 @@ namespace App\Http\Middleware;
 
 use Closure;
 use App\Models\Mobile\User;
+use App\Support\ApiTokenService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class AuthenticateApi
 {
     /**
-     * Verify token manual
+     * Verify token HMAC-signed. Tidak lagi log token mentah (token adalah
+     * kredensial rahasia, jangan ditulis ke storage/logs/laravel.log).
      */
     private function verifyToken(string $token): ?int
     {
-        try {
-            // Debug: log token yang diterima
-            Log::info('Token received: ' . $token);
-            
-            $decoded = json_decode(base64_decode($token), true);
-            
-            // Debug: log hasil decode
-            Log::info('Decoded token: ', $decoded);
-            
-            if (!$decoded) {
-                Log::error('Failed to decode token');
-                return null;
-            }
-            
-            if (!isset($decoded['exp'])) {
-                Log::error('Token has no exp field');
-                return null;
-            }
-            
-            $currentTime = time();
-            Log::info('Current time: ' . $currentTime . ', Exp time: ' . $decoded['exp']);
-            
-            if ($decoded['exp'] < $currentTime) {
-                Log::error('Token expired');
-                return null;
-            }
-            
-            if (!isset($decoded['id_user'])) {
-                Log::error('Token has no id_user field');
-                return null;
-            }
-            
-            return $decoded['id_user'];
-            
-        } catch (\Exception $e) {
-            Log::error('Token verification error: ' . $e->getMessage());
+        $decoded = ApiTokenService::verify($token);
+
+        if (!$decoded) {
+            Log::warning('Rejected API token: invalid, expired, or bad signature');
             return null;
         }
+
+        return $decoded['id_user'];
     }
 
     /**

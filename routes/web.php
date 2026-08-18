@@ -7,6 +7,11 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DataadminController;
+use App\Http\Controllers\SiklusController;
+use App\Http\Controllers\PrediksiController;
+use App\Http\Controllers\AnalitikController;
+use App\Http\Controllers\NotifikasiController;
 use Illuminate\Support\Facades\Route;
 
 // =====================================================
@@ -19,46 +24,50 @@ Route::get('/terms', fn() => view('terms'))->name('terms');
 Route::get('/api/team', fn() => response()->json([]))->name('api.team');
 Route::get('/download/ios', fn() => redirect('https://apps.apple.com/'))->name('download.ios');
 Route::get('/download/android', fn() => redirect('https://play.google.com/store'))->name('download.android');
+
 // =====================================================
 // ADMIN ROUTES
 // =====================================================
 Route::prefix('admin')->name('admin.')->group(function () {
 
     // Login
+    // throttle:5,1 -> maksimal 5 percobaan per menit per kombinasi IP+field yang dicoba,
+    // mencegah brute-force password admin.
     Route::get('/login',  [AdminAuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AdminAuthController::class, 'login'])->name('login.submit');
+    Route::post('/login', [AdminAuthController::class, 'login'])
+        ->middleware('throttle:5,1')
+        ->name('login.submit');
 
     Route::middleware('admin')->group(function () {
 
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
 
-        // Halaman Utama
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        Route::get('/notifikasi/data', [\App\Http\Controllers\NotifikasiController::class, 'getData'])->name('notifikasi.data');
-        // ← INI YANG DIPERBAIKI
-        Route::get('/siklus', [App\Http\Controllers\SiklusController::class, 'index'])->name('siklus');
         // ── Halaman Utama ──────────────────────────────
-       Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        Route::get('/siklus', [\App\Http\Controllers\SiklusController::class, 'index'])->name('siklus');
-        Route::get('/prediksi', [\App\Http\Controllers\PrediksiController::class, 'index'])->name('prediksi');
-       Route::get('/analitik', [\App\Http\Controllers\AnalitikController::class, 'index'])->name('analitik');
-
-        Route::get('/prediksi', [App\Http\Controllers\PrediksiController::class, 'index'])->name('prediksi');
-        Route::get('/analitik', [App\Http\Controllers\AnalitikController::class, 'index'])->name('analitik');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/notifikasi/data', [NotifikasiController::class, 'getData'])->name('notifikasi.data');
+        Route::get('/siklus', [SiklusController::class, 'index'])->name('siklus');
+        Route::get('/prediksi', [PrediksiController::class, 'index'])->name('prediksi');
+        Route::get('/analitik', [AnalitikController::class, 'index'])->name('analitik');
 
         // Register Admin
         Route::get('/register',  [AdminAuthController::class, 'showRegister'])->name('register');
         Route::post('/register', [AdminAuthController::class, 'register'])->name('register.submit');
 
         // Data Pengguna
-Route::prefix('pengguna')->name('pengguna.')->group(function () {
-    Route::get('/',              [UserController::class, 'index'])->name('index');
-    Route::get('/export',        [UserController::class, 'exportCsv'])->name('export');
-    Route::get('/{id}',          [UserController::class, 'show'])->name('show');
-    Route::patch('/{id}/status', [UserController::class, 'updateStatus'])->name('status');
-});
+        Route::prefix('pengguna')->name('pengguna.')->group(function () {
+            Route::get('/',              [UserController::class, 'index'])->name('index');
+            Route::get('/export',        [UserController::class, 'exportCsv'])->name('export');
+            Route::get('/{id}',          [UserController::class, 'show'])->name('show');
+            Route::patch('/{id}/status', [UserController::class, 'updateStatus'])->name('status');
+        });
 
-        // Laporan & Pengaturan (tetap)
+        // Data Admin
+        Route::prefix('data-admin')->name('data-admin.')->group(function () {
+            Route::get('/',     [DataadminController::class, 'index'])->name('index');
+            Route::get('/{id}', [DataadminController::class, 'show'])->name('show');
+        });
+
+        // Laporan & Pengaturan
         Route::prefix('laporan')->name('laporan')->group(function () {
             Route::get('/',          [LaporanController::class, 'index'])->name('');
             Route::post('/generate', [LaporanController::class, 'generate'])->name('.generate');

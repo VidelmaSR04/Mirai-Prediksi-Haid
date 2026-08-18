@@ -9,6 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+          integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" /> {{-- BARU: Font Awesome untuk ikon mata, search, close di modal --}}
     <script>
         tailwind.config = {
             theme: {
@@ -54,13 +57,14 @@
         <nav class="flex-1 px-6 space-y-2 overflow-y-auto">
             @php
                 $menu = [
-                           ['route' => 'admin.dashboard', 'icon' => 'dashboard', 'label' => 'Dashboard'],
-    ['route' => 'admin.pengguna.index', 'icon' => 'person', 'label' => 'Data Pengguna'],  // ← Diubah
-    ['route' => 'admin.siklus', 'icon' => 'calendar_month', 'label' => 'Data Siklus'],
-    ['route' => 'admin.prediksi', 'icon' => 'health_and_safety', 'label' => 'Prediksi'],
-    ['route' => 'admin.analitik', 'icon' => 'analytics', 'label' => 'Analitik'],
-    ['route' => 'admin.laporan', 'icon' => 'description', 'label' => 'Laporan'],
-                        ];
+                    ['route' => 'admin.dashboard',        'icon' => 'dashboard',            'label' => 'Dashboard'],
+                    ['route' => 'admin.pengguna.index',   'icon' => 'person',               'label' => 'Data Pengguna'],
+                    ['route' => 'admin.data-admin.index', 'icon' => 'admin_panel_settings', 'label' => 'Data Admin'],
+                    ['route' => 'admin.siklus',           'icon' => 'calendar_month',       'label' => 'Data Siklus'],
+                    ['route' => 'admin.prediksi',         'icon' => 'health_and_safety',    'label' => 'Prediksi'],
+                    ['route' => 'admin.analitik',         'icon' => 'analytics',            'label' => 'Analitik'],
+                    ['route' => 'admin.laporan',          'icon' => 'description',          'label' => 'Laporan'],
+                ];
             @endphp
 
             @foreach($menu as $item)

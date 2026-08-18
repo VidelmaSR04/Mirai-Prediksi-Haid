@@ -30,7 +30,6 @@
                 </a>
             </div>
 
-
             {{-- Action Buttons --}}
             <div class="flex items-center gap-3">
 
@@ -42,19 +41,30 @@
                 </button>
 
                 {{-- Auth --}}
-                {{-- @if (Route::has('login'))
-                    @auth
-                        <a href="{{ url('/dashboard') }}" class="px-5 py-2 rounded-full bg-baby-pink/30 font-bold text-sm">
-                            Dashboard
-                        </a>
-                    @else
-                        <a href="{{ route('login') }}"
-                            class="px-5 py-2 rounded-full bg-primary text-white font-bold text-sm shadow-md">
-                            Login
-                        </a>
+                @auth
+                    <a href="{{ route('admin.dataadmin.index') }}"
+                        class="px-5 py-2 rounded-full bg-soft-mint/50 font-bold text-sm hover:bg-soft-mint/80 transition-all">
+                        Data Admin
+                    </a>
 
-                    @endauth
-                @endif--}}
+                    <a href="{{ url('/dashboard') }}"
+                        class="px-5 py-2 rounded-full bg-baby-pink/30 font-bold text-sm hover:bg-baby-pink/50 transition-all">
+                        Dashboard
+                    </a>
+
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit"
+                            class="px-5 py-2 rounded-full bg-red-100 text-red-600 font-bold text-sm hover:bg-red-200 transition-all">
+                            Logout
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}"
+                        class="px-5 py-2 rounded-full bg-primary text-white font-bold text-sm shadow-md">
+                        Login
+                    </a>
+                @endauth
 
             </div>
 
