@@ -40,19 +40,20 @@
                     <span class="material-symbols-outlined">dark_mode</span>
                 </button>
 
-                {{-- Auth --}}
-                @auth
+                {{-- Auth: cek guard 'admin', karena situs ini cuma punya login admin.
+                     User biasa login lewat aplikasi mobile (API), bukan lewat web. --}}
+                @auth('admin')
                     <a href="{{ route('admin.dataadmin.index') }}"
                         class="px-5 py-2 rounded-full bg-soft-mint/50 font-bold text-sm hover:bg-soft-mint/80 transition-all">
                         Data Admin
                     </a>
 
-                    <a href="{{ url('/dashboard') }}"
+                    <a href="{{ route('admin.dashboard') }}"
                         class="px-5 py-2 rounded-full bg-baby-pink/30 font-bold text-sm hover:bg-baby-pink/50 transition-all">
                         Dashboard
                     </a>
 
-                    <form method="POST" action="{{ route('logout') }}">
+                    <form method="POST" action="{{ route('admin.logout') }}">
                         @csrf
                         <button type="submit"
                             class="px-5 py-2 rounded-full bg-red-100 text-red-600 font-bold text-sm hover:bg-red-200 transition-all">
@@ -60,7 +61,7 @@
                         </button>
                     </form>
                 @else
-                    <a href="{{ route('login') }}"
+                    <a href="{{ route('admin.login') }}"
                         class="px-5 py-2 rounded-full bg-primary text-white font-bold text-sm shadow-md">
                         Login
                     </a>

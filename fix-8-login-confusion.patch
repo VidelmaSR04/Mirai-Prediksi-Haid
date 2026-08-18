@@ -1,0 +1,94 @@
+diff --git a/config/auth.php b/config/auth.php
+index 90fc7e6..25a5e24 100644
+--- a/config/auth.php
++++ b/config/auth.php
+@@ -2,8 +2,12 @@
+ 
+ return [
+     'defaults' => [
+-        'guard'     => 'web',
+-        'passwords' => 'users',
++        // Diganti dari 'web' ke 'admin' karena situs ini cuma punya login
++        // admin. Guard 'web' bawaan Breeze (App\Models\User) tidak dipakai
++        // untuk fitur nyata apa pun dan rutenya sudah dinonaktifkan di
++        // routes/web.php.
++        'guard'     => 'admin',
++        'passwords' => 'admins',
+     ],
+ 
+     'guards' => [
+diff --git a/resources/views/layouts/partials/navbar.blade.php b/resources/views/layouts/partials/navbar.blade.php
+index 241597b..7be2262 100644
+--- a/resources/views/layouts/partials/navbar.blade.php
++++ b/resources/views/layouts/partials/navbar.blade.php
+@@ -40,19 +40,20 @@ class="p-2 rounded-full bg-soft-mint/50 dark:bg-gray-800 text-primary dark:text-
+                     <span class="material-symbols-outlined">dark_mode</span>
+                 </button>
+ 
+-                {{-- Auth --}}
+-                @auth
++                {{-- Auth: cek guard 'admin', karena situs ini cuma punya login admin.
++                     User biasa login lewat aplikasi mobile (API), bukan lewat web. --}}
++                @auth('admin')
+                     <a href="{{ route('admin.dataadmin.index') }}"
+                         class="px-5 py-2 rounded-full bg-soft-mint/50 font-bold text-sm hover:bg-soft-mint/80 transition-all">
+                         Data Admin
+                     </a>
+ 
+-                    <a href="{{ url('/dashboard') }}"
++                    <a href="{{ route('admin.dashboard') }}"
+                         class="px-5 py-2 rounded-full bg-baby-pink/30 font-bold text-sm hover:bg-baby-pink/50 transition-all">
+                         Dashboard
+                     </a>
+ 
+-                    <form method="POST" action="{{ route('logout') }}">
++                    <form method="POST" action="{{ route('admin.logout') }}">
+                         @csrf
+                         <button type="submit"
+                             class="px-5 py-2 rounded-full bg-red-100 text-red-600 font-bold text-sm hover:bg-red-200 transition-all">
+@@ -60,7 +61,7 @@ class="px-5 py-2 rounded-full bg-red-100 text-red-600 font-bold text-sm hover:bg
+                         </button>
+                     </form>
+                 @else
+-                    <a href="{{ route('login') }}"
++                    <a href="{{ route('admin.login') }}"
+                         class="px-5 py-2 rounded-full bg-primary text-white font-bold text-sm shadow-md">
+                         Login
+                     </a>
+diff --git a/routes/web.php b/routes/web.php
+index 989fb92..bd74e1b 100644
+--- a/routes/web.php
++++ b/routes/web.php
+@@ -83,12 +83,22 @@
+ });
+ 
+ // =====================================================
+-// USER PROFILE
++// CATATAN: Rute Breeze bawaan (/login, /register, /profile, guard 'web')
++// SENGAJA DINONAKTIFKAN.
++//
++// Sistem ini cuma punya 2 jenis login: admin (web, guard 'admin') dan
++// user mobile (API, token HMAC sendiri). Guard 'web' + App\Models\User
++// bawaan Breeze tidak pernah dipakai untuk fitur nyata apa pun, jadi
++// dibiarkan aktif cuma jadi jalur otentikasi kedua yang tidak terpantau
++// dan berpotensi crash (App\Models\User tidak pernah diisi data asli).
++//
++// Kalau nanti butuh portal web untuk user biasa (bukan admin, bukan
++// mobile), aktifkan lagi baris di bawah dan pastikan App\Models\User
++// benar-benar terhubung ke data user yang sesuai.
+ // =====================================================
+-Route::middleware('auth')->group(function () {
+-    Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');
+-    Route::patch('/profile',  [ProfileController::class, 'update'])->name('profile.update');
+-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+-});
+-
+-require __DIR__ . '/auth.php';
+\ No newline at end of file
++// Route::middleware('auth')->group(function () {
++//     Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');
++//     Route::patch('/profile',  [ProfileController::class, 'update'])->name('profile.update');
++//     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
++// });
++// require __DIR__ . '/auth.php';
+\ No newline at end of file
