@@ -31,8 +31,12 @@ Route::get('/download/android', fn() => redirect('https://play.google.com/store'
 Route::prefix('admin')->name('admin.')->group(function () {
 
     // Login
+    // throttle:5,1 -> maksimal 5 percobaan per menit per kombinasi IP+field yang dicoba,
+    // mencegah brute-force password admin.
     Route::get('/login',  [AdminAuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AdminAuthController::class, 'login'])->name('login.submit');
+    Route::post('/login', [AdminAuthController::class, 'login'])
+        ->middleware('throttle:5,1')
+        ->name('login.submit');
 
     Route::middleware('admin')->group(function () {
 

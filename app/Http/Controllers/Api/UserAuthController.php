@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Mobile\User;
 use App\Models\Mobile\EmailVerification;
+use App\Support\ApiTokenService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -30,35 +31,25 @@ class UserAuthController extends Controller
     }
 
     /**
-     * Generate token manual untuk login
+     * Generate token untuk login, ditandatangani dengan HMAC (APP_KEY)
+     * supaya tidak bisa dipalsukan seperti token lama (base64 polos).
      */
     private function generateToken($user)
     {
-        $payload = [
+        return ApiTokenService::generate([
             'id_user' => $user->id_user,
             'email' => $user->email,
-            'exp' => time() + (86400 * 7), // 7 hari
-        ];
-        
-        return base64_encode(json_encode($payload));
+        ]);
     }
 
     /**
-     * Verify token manual
+     * Verify token bertanda tangan. Mengembalikan id_user jika valid & signature cocok.
      */
     private function verifyToken($token)
     {
-        try {
-            $decoded = json_decode(base64_decode($token), true);
-            
-            if (!$decoded || !isset($decoded['exp']) || $decoded['exp'] < time()) {
-                return null;
-            }
-            
-            return $decoded['id_user'] ?? null;
-        } catch (\Exception $e) {
-            return null;
-        }
+        $decoded = ApiTokenService::verify($token);
+
+        return $decoded['id_user'] ?? null;
     }
 
     /**
