@@ -44,21 +44,23 @@ Perbaikan ini merespons laporan pentest terhadap `mirai.nexidn.my.id`
 - **Tailwind CDN di production** (`admin/layout.blade.php`,
   `layouts/app.blade.php`, `auth/login.blade.php`) — DevTools browser
   sendiri sudah warning: *"cdn.tailwindcss.com should not be used in
-  production"*. Project ini SEBENARNYA sudah punya build pipeline yang
-  benar (`vite.config.js`, `tailwind.config.js`,
-  `resources/css/app.css`) tapi tidak dipakai — ketiga file blade di
-  atas malah load Tailwind lewat CDN script. Migrasi ke build asli
-  akan sekalian menutup temuan SRI di resource ini (karena jadi aset
-  lokal, bukan CDN eksternal lagi). Ini PERBAIKAN BESAR yang butuh:
-  1. Memindahkan warna/tema custom dari `<script>tailwind.config={...}</script>`
-     di tiap blade ke `tailwind.config.js`
-  2. Jalankan `npm run build`
-  3. Ganti `<script src="cdn.tailwindcss.com...">` jadi `@vite(...)`
-  4. **Testing visual manual** di setiap halaman admin — risiko
-     tampilan berubah/rusak nggak bisa dicek otomatis dari sini.
+  production"*. **Keputusan: TIDAK dimigrasikan ke build asli.**
 
-  Belum aku kerjakan karena risikonya nggak kecil dan aku nggak bisa
-  lihat hasil visualnya. Kasih tau kalau mau lanjut ke ini.
+  Alasan: temuan ini levelnya INFORMASI (paling rendah), bukan celah
+  keamanan yang bisa dieksploitasi — cuma warning performa/best-practice
+  dari Tailwind sendiri. Setelah dicek, admin panel dan halaman publik
+  ternyata pakai DUA tema Tailwind yang bentrok kalau digabung jadi satu
+  `tailwind.config.js` build (font-sans, border-radius default, dan
+  warna custom-nya beda total antara admin vs halaman publik). CDN bisa
+  begini karena tiap halaman load config sendiri-sendiri secara
+  independen; build asli cuma bisa satu config global.
+
+  Menutup temuan level informasi ini butuh migrasi arsitektur (pisah
+  token/build per tema) yang menyentuh puluhan file blade tanpa bisa
+  dites visual dari sini — risiko regresi tampilan tidak sepadan
+  dengan manfaat keamanannya. Kalau nanti mau dikerjakan, sebaiknya
+  dikerjakan bertahap dengan testing manual di tiap halaman, bukan
+  lewat patch otomatis.
 
 ## Wajib dicek manual di server (di luar kode aplikasi)
 
