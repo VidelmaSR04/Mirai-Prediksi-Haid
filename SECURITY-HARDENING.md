@@ -29,6 +29,14 @@ Perbaikan ini merespons laporan pentest terhadap `mirai.nexidn.my.id`
    *"Missing Subresource Integrity"* — CDN unpinned bisa berubah isi
    kapan saja tanpa sepengetahuan kita.
 
+5. **SameSite cookie jadi `strict`** (`config/session.php`)
+   Sebelumnya `lax` (default Laravel). Diubah ke `strict` sesuai
+   temuan *"Missing Cookie SameSite Strict"*. Konsekuensi: kalau user
+   membuka link ke aplikasi ini dari luar situs (email/WhatsApp) sambil
+   masih login, klik pertama tidak membawa cookie sesi — perlu satu
+   navigasi lagi di dalam situs. Risiko UX ini kecil untuk aplikasi
+   tanpa alur OAuth pihak ketiga seperti ini.
+
 ## Sengaja BELUM diperbaiki lewat patch ini (butuh keputusan kamu)
 
 - **SRI hash pada Chart.js/Google Fonts/Tailwind CDN** — belum
