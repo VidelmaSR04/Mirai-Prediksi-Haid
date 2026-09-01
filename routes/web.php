@@ -83,12 +83,22 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 // =====================================================
-// USER PROFILE
+// CATATAN: Rute Breeze bawaan (/login, /register, /profile, guard 'web')
+// SENGAJA DINONAKTIFKAN.
+//
+// Sistem ini cuma punya 2 jenis login: admin (web, guard 'admin') dan
+// user mobile (API, token HMAC sendiri). Guard 'web' + App\Models\User
+// bawaan Breeze tidak pernah dipakai untuk fitur nyata apa pun, jadi
+// dibiarkan aktif cuma jadi jalur otentikasi kedua yang tidak terpantau
+// dan berpotensi crash (App\Models\User tidak pernah diisi data asli).
+//
+// Kalau nanti butuh portal web untuk user biasa (bukan admin, bukan
+// mobile), aktifkan lagi baris di bawah dan pastikan App\Models\User
+// benar-benar terhubung ke data user yang sesuai.
 // =====================================================
-Route::middleware('auth')->group(function () {
-    Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile',  [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
-
-require __DIR__ . '/auth.php';
+// Route::middleware('auth')->group(function () {
+//     Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');
+//     Route::patch('/profile',  [ProfileController::class, 'update'])->name('profile.update');
+//     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+// });
+// require __DIR__ . '/auth.php';

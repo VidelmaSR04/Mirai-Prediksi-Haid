@@ -2,8 +2,12 @@
 
 return [
     'defaults' => [
-        'guard'     => 'web',
-        'passwords' => 'users',
+        // Diganti dari 'web' ke 'admin' karena situs ini cuma punya login
+        // admin. Guard 'web' bawaan Breeze (App\Models\User) tidak dipakai
+        // untuk fitur nyata apa pun dan rutenya sudah dinonaktifkan di
+        // routes/web.php.
+        'guard'     => 'admin',
+        'passwords' => 'admins',
     ],
 
     'guards' => [

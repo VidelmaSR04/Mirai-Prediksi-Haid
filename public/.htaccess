@@ -1,3 +1,14 @@
+# Blokir akses ke file/folder tersembunyi (.git, .env, .config, dll).
+# Defense-in-depth: mencegah kebocoran source/history jika document root
+# server suatu saat salah diarahkan ke root proyek, bukan ke /public.
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule "(^|/)\." - [F]
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

@@ -194,9 +194,17 @@ return [
     |
     | Supported: "lax", "strict", "none", null
     |
+    | Diset ke "strict" (bukan default Laravel "lax") sesuai temuan pentest
+    | "Missing Cookie SameSite Strict". Konsekuensi: kalau user membuka link
+    | ke aplikasi ini dari situs lain (mis. link di email/WhatsApp) sambil
+    | masih login, klik pertama tidak akan terbawa cookie sesi — user perlu
+    | satu klik/navigasi lagi di dalam situs sebelum dianggap login. Untuk
+    | aplikasi ini (login form + admin panel, tanpa alur OAuth pihak ketiga)
+    | risiko UX ini kecil.
+    |
     */
 
-    'same_site' => 'lax',
+    'same_site' => 'strict',
 
     /*
     |--------------------------------------------------------------------------
